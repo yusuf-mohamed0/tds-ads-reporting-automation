@@ -33,21 +33,68 @@ def fetch_all(
     month: str,
     fetch_meta: bool = True,
     fetch_google: bool = True,
+    cache=None,
 ) -> FetchedData:
     data = FetchedData()
     if fetch_meta and client.meta.ad_accounts:
-        data.meta_ads = fetch_campaign_insights(
-            meta_token, meta_version, client.meta.ad_accounts[0], month
-        )
+        data.meta_ads = _cached(cache, client.id, month, "meta_ads",
+                                lambda: fetch_campaign_insights(
+                                    meta_token, meta_version, client.meta.ad_accounts[0], month
+                                ))
         if client.meta.page_id:
-            data.page = fetch_page_metrics(meta_token, meta_version, client.meta.page_id, month)
-            data.top_posts = fetch_top_posts(meta_token, meta_version, client.meta.page_id, month)
+            data.page = _cached(cache, client.id, month, "page",
+                                lambda: fetch_page_metrics(meta_token, meta_version, client.meta.page_id, month))
+            data.top_posts = _cached(cache, client.id, month, "top_posts",
+                                     lambda: fetch_top_posts(meta_token, meta_version, client.meta.page_id, month))
         if client.meta.instagram_id:
-            data.instagram = fetch_instagram_metrics(
-                meta_token, meta_version, client.meta.instagram_id, month
-            )
+            data.instagram = _cached(cache, client.id, month, "instagram",
+                                     lambda: fetch_instagram_metrics(
+                                         meta_token, meta_version, client.meta.instagram_id, month
+                                     ))
     if fetch_google and client.google_ads.customer_ids:
-        data.google_ads = fetch_campaigns(google_yaml, client.google_ads.customer_ids[0], month)
+        data.google_ads = _cached(cache, client.id, month, "google_ads",
+                                  lambda: fetch_campaigns(google_yaml, client.google_ads.customer_ids[0], month))
+    return data
+
+
+def _cached(cache, client_id: str, month: str, platform: str, fetch):
+    """Return cached payload if present, else fetch, serialize, and store."""
+    if cache is not None:
+        cached = cache.get(client_id, month, platform)
+        if cached is not None:
+            return _deserialize(cached, platform)
+    value = fetch()
+    if cache is not None:
+        try:
+            cache.set(client_id, month, platform, _serialize(value))
+        except Exception:  # noqa: BLE001
+            pass
+    return value
+
+
+def _serialize(value):
+    from dataclasses import asdict
+
+    return asdict(value)
+
+
+def _deserialize(data: dict, platform: str):
+    from tds_ads_reporting.google_ads.ads import GoogleAdsSummary, GoogleCampaign
+    from tds_ads_reporting.meta.ads import AdsSummary, CampaignRow
+    from tds_ads_reporting.meta.page import InstagramMetrics, PageMetrics, PostRow
+
+    if platform == "meta_ads":
+        campaigns = [CampaignRow(**d) for d in data.get("campaigns", [])]
+        return AdsSummary(**{**data, "campaigns": campaigns})
+    if platform == "page":
+        return PageMetrics(**data)
+    if platform == "top_posts":
+        return [PostRow(**d) for d in data]
+    if platform == "instagram":
+        return InstagramMetrics(**data)
+    if platform == "google_ads":
+        campaigns = [GoogleCampaign(**d) for d in data.get("campaigns", [])]
+        return GoogleAdsSummary(**{**data, "campaigns": campaigns})
     return data
 
 
