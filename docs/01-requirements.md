@@ -48,15 +48,24 @@ Recommended implementation packages:
 
 ## Meta Access Requirements
 
+The reference report ("Lodge - March 2026") is a full **Meta Business Suite** report covering Reach, Messaging, Content, Audience, and Ads across Facebook and Instagram. This requires more than ads access.
+
 - Meta Business Manager admin access.
 - Meta Developer account.
 - Meta App owned by the Business Manager.
 - Marketing API available for the app.
-- `ads_read` permission minimum.
-- Business System User created in Business Settings.
-- Every client ad account assigned to the System User with reporting access.
-- System User access token generated and stored securely.
-- Ad account IDs for every client in `act_<ID>` format.
+- Permissions required (superset):
+  - `ads_read`
+  - `pages_read_engagement`
+  - `pages_read_user_content`
+  - `pages_show_list`
+  - `read_insights`
+  - `instagram_manage_insights` / IG insights scopes
+  - `pages_messaging` / messaging insights scopes if conversational metrics are needed
+- Business System User created in Business Settings, OR a user/page-access-token covering every FB Page and IG professional account referenced by client reports.
+- Every client ad account assigned to the System User with reporting access; every FB Page and IG account assigned/linked for insights.
+- Access token covering all pages/IG accounts, stored securely.
+- Ad account IDs in `act_<ID>` format, plus Page IDs and Instagram IDs (or handles) for content/audience/messaging metrics.
 
 ## Google Ads Access Requirements
 
@@ -116,14 +125,32 @@ Required sections:
 - Executive summary.
 - Overall monthly KPI cards.
 - Platform split: Meta vs Google Ads when both exist.
-- Meta Ads section when enabled.
+- Reach (FB + IG, organic vs paid breakdown).
+- Messaging / conversations (FB + IG, organic vs paid).
+- Content performance (top posts/media).
+- Audience demographics + followers.
+- Meta Ads section when enabled (campaign tables).
 - Google Ads section when enabled.
 - Campaign performance table.
 - Best performers.
 - Weak performers.
-- Month-over-month comparison.
+- Budget / Spend / VAT / Remaining.
+- Manual narrative insights (account manager review, optionally AI-drafted).
 - Recommendations and next steps.
 - Appendix or definitions if needed.
+
+## Manual Inputs Required Per Client Per Month
+
+The reference report includes values that are not in any API:
+
+- Monthly budget (e.g. EGP 63,600).
+- Amount spent (API-provided) and VAT amount.
+- Remaining budget.
+- Currency.
+- Report Scope prose.
+- Insights commentary and recommendations.
+
+These must be stored locally in client/month configuration or an editable notes file, then injected into the generated PDF.
 
 ## Reliability Requirements
 

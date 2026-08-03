@@ -7,9 +7,10 @@ Local Linux automation plan for monthly Meta Ads and Google Ads client PDF repor
 This project defines the requirements, architecture, setup process, and implementation roadmap for a local reporting app that:
 
 - Pulls Meta Ads performance through the official Meta Marketing API.
+- Pulls Facebook/Instagram Page, content, messaging, and audience insights for Business Suite reports.
 - Pulls Google Ads performance through the official Google Ads API.
 - Supports around 30 clients with mixed goals.
-- Generates English monthly PDF reports.
+- Generates English monthly PDF reports matching the agency's "Lodge - March 2026" reference format.
 - Emails reports automatically to `reports@trafficdigitalsolutions.com`.
 - Avoids browser-login automation, screenshots, 2FA bypasses, Gmail-code handling, and dashboard scraping.
 
@@ -27,10 +28,12 @@ Do not automate Meta Business Suite or Google Ads UI screenshots. API-based repo
 - `docs/04-google-ads-api-setup.md` - Google Ads API setup checklist.
 - `docs/05-client-config-and-data-model.md` - client mapping, goal mapping, and local database schema.
 - `docs/06-report-template-spec.md` - PDF sections, metrics, charts, and narrative structure.
+- `docs/06-report-template-spec-lodge.md` - exact page-by-page analysis of the "Lodge - March 2026" reference report and API mapping.
 - `docs/07-security-and-operations.md` - secrets, permissions, logs, backups, monitoring, and monthly runbook.
 - `docs/08-implementation-roadmap.md` - phased build plan and acceptance criteria.
 - `docs/09-qa-checklist.md` - verification checklist before monthly reports are trusted.
 - `configs/clients.example.yaml` - example client configuration.
+- `manual_inputs/lodge_2026-03.yaml` - example of budget/VAT/notes that are manually injected into the report.
 - `.env.example` - local environment variable template.
 
 ## Required Inputs Before Build
@@ -54,4 +57,6 @@ Do not automate Meta Business Suite or Google Ads UI screenshots. API-based repo
 
 ## Current Status
 
-Planning and architecture package complete. Implementation can start after the sample report is provided and API credentials are created.
+Planning and architecture package complete, now aligned to the real "Lodge - March 2026" sample report. The sample confirms reports are full Meta Business Suite reports (Reach, Messaging, Content, Audience, Ads) requiring Page/Instagram insights permissions in addition to ads access, plus manual budget/VAT/insight narrative that must be injected locally.
+
+Implementation can start after API credentials are created and per-client page/IG access is confirmed.

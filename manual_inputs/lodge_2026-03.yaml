@@ -1,0 +1,31 @@
+# Manual inputs for Lodge - March 2026
+# This file injects non-API values into the report PDF.
+# Edit these values each month; keep in Git only if the repo is private and this contains no secrets.
+
+client_id: lodge
+month: "2026-03"
+
+budget:
+  amount: 63600
+  currency: EGP
+
+spend:
+  amount: 42834
+  vat: 48830
+  remaining: 14770
+
+scope_prose: |
+  In March 2026, we prioritized engagement through messaging campaigns and profile visits.
+
+insights:
+  - "Reach grew versus the prior month."
+  - "CPM and message volume improved during Ramadan."
+  - "Total messages reached 1.6K with 87% paid."
+  - "Recommendation: continue the messaging campaign."
+  - "We still need to demonstrate profit impact of the campaign."
+  - "Pizza content was the best-performing content; consider more of it."
+
+recommendations:
+  - "Continue the messages campaign and expand top-performing audiences."
+  - "Invest more in content similar to the top pizza post."
+  - "Review profit/attribution data to show revenue impact."
