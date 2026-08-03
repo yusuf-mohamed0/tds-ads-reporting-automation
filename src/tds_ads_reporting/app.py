@@ -6,8 +6,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 import click
 
 from tds_ads_reporting.config import load_config
-from tds_ads_reporting.reporting.pdf import render_pdf
+from tds_ads_reporting.mailer.sender import send_report
 from tds_ads_reporting.manual_inputs.loader import load_manual_inputs
+from tds_ads_reporting.meta.credentials import init_credentials
+from tds_ads_reporting.reporting.assembler import fetch_all
+from tds_ads_reporting.reporting.pdf import render_pdf
 
 
 @click.group()
@@ -18,28 +21,61 @@ def cli():
 @cli.command()
 @click.option("--client", "client_id", required=True)
 @click.option("--month", "month", required=True, help="YYYY-MM")
-@click.option("--dry-run", is_flag=True)
-def run(client_id: str, month: str, dry_run: bool) -> None:
+@click.option("--dry-run", is_flag=True, help="Fetch nothing, show what would run")
+@click.option("--no-fetch", is_flag=True, help="Render with manual inputs only")
+@click.option("--email", is_flag=True, help="Send the PDF to the report recipient")
+def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, email: bool) -> None:
     """Generate a monthly report for one client."""
     cfg = load_config()
     client = cfg.client(client_id)
     manual = load_manual_inputs(client_id, month)
+    creds = init_credentials()
+
     if dry_run:
-        click.echo(f"[dry-run] {client.name} {month}: platforms={client.platforms()}")
+        click.echo(f"[dry-run] {client.name} {month}")
+        click.echo(f"  platforms: {', '.join(client.platforms()) or 'none'}")
+        click.echo(f"  meta accounts: {client.meta.ad_accounts or []}")
+        click.echo(f"  page: {client.meta.page_id}  ig: {client.meta.instagram_id}")
+        click.echo(f"  google customers: {client.google_ads.customer_ids or []}")
         return
-    pdf = render_pdf(cfg, client, month, manual)
+
+    data = fetch_all(
+        meta_token=creds.meta_access_token,
+        meta_version=creds.meta_api_version,
+        google_yaml=creds.google_ads_yaml,
+        client=client,
+        month=month,
+        fetch_meta=not no_fetch,
+        fetch_google=not no_fetch,
+    )
+    pdf = render_pdf(cfg, client, month, manual, data)
     click.echo(f"wrote {pdf}")
+
+    if email:
+        send_report(client=client, pdf_path=pdf, month=month)
 
 
 @cli.command()
 @click.option("--month", "month", required=True)
-def run_all(month: str) -> None:
+@click.option("--email", is_flag=True)
+def run_all(month: str, email: bool) -> None:
     """Generate reports for all active clients."""
     cfg = load_config()
+    creds = init_credentials()
     for client in cfg.active_clients():
         try:
-            pdf = render_pdf(cfg, client, month, load_manual_inputs(client.id, month))
+            manual = load_manual_inputs(client.id, month)
+            data = fetch_all(
+                meta_token=creds.meta_access_token,
+                meta_version=creds.meta_api_version,
+                google_yaml=creds.google_ads_yaml,
+                client=client,
+                month=month,
+            )
+            pdf = render_pdf(cfg, client, month, manual, data)
             click.echo(f"ok {client.id} -> {pdf}")
+            if email:
+                send_report(client=client, pdf_path=pdf, month=month)
         except Exception as exc:  # noqa: BLE001
             click.echo(f"fail {client.id}: {exc}")
 
