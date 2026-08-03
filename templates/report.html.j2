@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 15mm 16mm 15mm;
+    @bottom-center {
+      content: "Traffic Digital Solutions";
+      font-size: 8pt; color: #8a8f98;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-size: 8pt; color: #8a8f98;
+    }
+  }
+  :root {
+    --brand: #0f4c81;
+    --brand-dark: #0b3a63;
+    --accent: #e8a33d;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg-soft: #f4f6f9;
+    --ok: #1d7a4f;
+    --bad: #b23b3b;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif; color: var(--ink); margin: 0; font-size: 10pt; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  /* Cover */
+  .cover { display: flex; flex-direction: column; justify-content: space-between; height: 255mm; }
+  .cover-brand { color: var(--brand); font-weight: 800; letter-spacing: 2px; font-size: 11pt; }
+  .cover-title { color: var(--brand); font-size: 30pt; font-weight: 800; margin: 0 0 6px 0; }
+  .cover-sub { color: var(--muted); font-size: 13pt; }
+  .cover-meta { margin-top: 24px; }
+  .cover-meta div { font-size: 11pt; margin: 3px 0; }
+  .cover-foot { border-top: 2px solid var(--brand); padding-top: 10px; color: var(--muted); font-size: 9pt; }
+
+  /* Sections */
+  h2.section {
+    color: var(--brand); font-size: 15pt; font-weight: 800;
+    border-bottom: 3px solid var(--accent); padding-bottom: 4px; margin: 0 0 12px 0;
+  }
+  h3.block { color: var(--brand-dark); font-size: 11.5pt; margin: 14px 0 6px 0; }
+
+  /* KPI cards */
+  .cards { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px 0; }
+  .card {
+    flex: 1 1 140px; background: var(--bg-soft); border: 1px solid var(--line);
+    border-top: 3px solid var(--brand); border-radius: 6px; padding: 8px 10px;
+  }
+  .card .label { color: var(--muted); font-size: 8pt; text-transform: uppercase; letter-spacing: .5px; }
+  .card .value { font-size: 15pt; font-weight: 800; color: var(--brand-dark); margin-top: 2px; }
+  .card .sub { font-size: 8pt; color: var(--muted); }
+  .up { color: var(--ok); } .down { color: var(--bad); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px 0; font-size: 9pt; }
+  th { background: var(--brand); color: #fff; text-align: left; padding: 6px 8px; font-weight: 600; }
+  td { border-bottom: 1px solid var(--line); padding: 5px 8px; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Organic/paid split bars */
+  .split { margin: 4px 0 10px 0; }
+  .split .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+  .split .organic { background: var(--brand); }
+  .split .paid { background: var(--accent); }
+  .split .legend span { margin-right: 12px; font-size: 8.5pt; color: var(--muted); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
+
+  /* Donut placeholder */
+  .donut { display: inline-block; width: 90px; height: 90px; border-radius: 50%; margin: 8px 0; }
+  .donut.lg { background: conic-gradient(var(--brand) 0 78%, var(--accent) 78% 100%); }
+  .donut.ig { background: conic-gradient(var(--brand) 0 65%, var(--accent) 65% 100%); }
+
+  /* Scope / insights prose */
+  .prose { background: var(--bg-soft); border-left: 4px solid var(--accent); padding: 10px 12px; color: #374151; line-height: 1.55; }
+  ul.insights { padding-left: 16px; }
+  ul.insights li { margin: 4px 0; line-height: 1.5; }
+  .budget-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  .budget-box { border: 1px solid var(--line); border-radius: 6px; padding: 10px; text-align: center; }
+  .budget-box .label { font-size: 8pt; color: var(--muted); text-transform: uppercase; }
+  .budget-box .value { font-size: 13pt; font-weight: 800; color: var(--brand-dark); margin-top: 4px; }
+  .toc-line { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px dotted var(--line); font-size: 11pt; }
+  .toc-num { color: var(--accent); font-weight: 800; margin-right: 8px; }
+  .footer-note { margin-top: 14px; color: var(--muted); font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-brand">TRAFFIC DIGITAL SOLUTIONS</div>
+    <div>
+      <h1 class="cover-title">{{ client.name }}</h1>
+      <div class="cover-sub">{{ month_label }} Performance Report</div>
+    </div>
+    <div>
+      <div class="cover-meta">
+        <div>Reporting Period: {{ date_start }} &mdash; {{ date_stop }}</div>
+        <div>Platforms: {{ platforms_label }}</div>
+        <div>Prepared by: Traffic Digital Solutions</div>
+      </div>
+      <div class="cover-foot">Confidential &middot; Prepared exclusively for {{ client.name }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TABLE OF CONTENTS ================= -->
+<div class="page">
+  <h2 class="section">Table of Contents</h2>
+  {% for item in toc %}
+  <div class="toc-line"><span><span class="toc-num">{{ loop.index }}</span>{{ item }}</span></div>
+  {% endfor %}
+</div>
+
+<!-- ================= REPORT SCOPE ================= -->
+<div class="page">
+  <h2 class="section">Report Scope</h2>
+  <div class="prose">{{ scope_prose }}</div>
+  {% if scope_notes %}<div class="prose" style="margin-top:10px">{{ scope_notes }}</div>{% endif %}
+</div>
+
+<!-- ================= REACH ================= -->
+{% for platform in reach %}
+<div class="page">
+  <h2 class="section">Reach &mdash; {{ platform.name }}</h2>
+  <div class="cards">
+    {% for card in platform.cards %}
+    <div class="card"><div class="label">{{ card.label }}</div><div class="value">{{ card.value }}</div>{% if card.sub %}<div class="sub">{{ card.sub }}</div>{% endif %}</div>
+    {% endfor %}
+  </div>
+  <h3 class="block">Content Overview</h3>
+  <div class="split">
+    <div class="legend"><span><span class="dot" style="background:var(--brand)"></span>From Organic</span><span><span class="dot" style="background:var(--accent)"></span>From Ads</span></div>
+    <div class="bar"><div class="organic" style="width:{{ platform.organic_pct }}%"></div><div class="paid" style="width:{{ platform.paid_pct }}%"></div></div>
+  </div>
+  <div style="display:flex;gap:24px;align-items:center">
+    <div class="donut {{ 'lg' if platform.name == 'Facebook' else 'ig' }}"></div>
+    <table style="width:60%">
+      <tbody>
+        <tr><td>Total</td><td class="num">{{ platform.total }}</td></tr>
+        <tr><td>From Organic</td><td class="num">{{ platform.organic }}</td></tr>
+        <tr><td>From Ads</td><td class="num">{{ platform.paid }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ================= MESSAGING ================= -->
+{% for platform in messaging %}
+<div class="page">
+  <h2 class="section">Messaging &mdash; {{ platform.name }}</h2>
+  <div class="cards">
+    <div class="card"><div class="label">Total Contacts</div><div class="value">{{ platform.total_contacts }}</div></div>
+    <div class="card"><div class="label">Conversations Started</div><div class="value">{{ platform.conversations }}</div></div>
+    <div class="card"><div class="label">Organic</div><div class="value">{{ platform.organic }}</div></div>
+    <div class="card"><div class="label">Paid</div><div class="value">{{ platform.paid }}</div></div>
+  </div>
+  <div class="split">
+    <div class="legend"><span><span class="dot" style="background:var(--brand)"></span>Organic {{ platform.organic }}</span><span><span class="dot" style="background:var(--accent)"></span>Paid {{ platform.paid }}</span></div>
+    <div class="bar"><div class="organic" style="width:{{ platform.organic_pct }}%"></div><div class="paid" style="width:{{ platform.paid_pct }}%"></div></div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ================= CONTENT ================= -->
+{% for platform in content %}
+<div class="page">
+  <h2 class="section">Top Content &mdash; {{ platform.name }}</h2>
+  <table>
+    <thead><tr><th>Content</th><th>Published</th><th class="num">Views</th><th class="num">Reach</th><th class="num">From Ads</th></tr></thead>
+    <tbody>
+      {% for row in platform.top %}
+      <tr><td>{{ row.title }}</td><td>{{ row.date }}</td><td class="num">{{ row.views }}</td><td class="num">{{ row.reach }}</td><td class="num">{{ row.from_ads }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<!-- ================= AUDIENCE ================= -->
+{% for platform in audience %}
+<div class="page">
+  <h2 class="section">Audience &mdash; {{ platform.name }}</h2>
+  <div class="cards">
+    <div class="card"><div class="label">Lifetime Followers</div><div class="value">{{ platform.followers }}</div></div>
+  </div>
+  <h3 class="block">Demographics</h3>
+  <table>
+    <thead><tr><th>Age</th><th>Female</th><th>Male</th></tr></thead>
+    <tbody>
+      {% for row in platform.demographics %}
+      <tr><td>{{ row.age }}</td><td class="num">{{ row.female }}</td><td class="num">{{ row.male }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<!-- ================= ADS ================= -->
+{% for platform in ads %}
+<div class="page">
+  <h2 class="section">Ads &mdash; {{ platform.name }}</h2>
+  <div class="cards">
+    <div class="card"><div class="label">Amount Spent</div><div class="value">{{ platform.spend }}</div></div>
+    <div class="card"><div class="label">Impressions</div><div class="value">{{ platform.impressions }}</div></div>
+    <div class="card"><div class="label">Reach</div><div class="value">{{ platform.reach }}</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Results</th><th class="num">Cost / Result</th><th class="num">Amount Spent</th><th class="num">Impressions</th><th class="num">Reach</th></tr></thead>
+    <tbody>
+      {% for row in platform.campaigns %}
+      <tr><td>{{ row.name }}</td><td class="num">{{ row.results }}</td><td class="num">{{ row.cost_per_result }}</td><td class="num">{{ row.spend }}</td><td class="num">{{ row.impressions }}</td><td class="num">{{ row.reach }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<!-- ================= BUDGET / SPEND ================= -->
+<div class="page">
+  <h2 class="section">Budget &amp; Spend</h2>
+  <div class="budget-grid">
+    <div class="budget-box"><div class="label">Budget</div><div class="value">{{ budget.amount }}</div></div>
+    <div class="budget-box"><div class="label">Spent</div><div class="value">{{ budget.spent }}</div></div>
+    <div class="budget-box"><div class="label">VAT</div><div class="value">{{ budget.vat }}</div></div>
+    <div class="budget-box"><div class="label">Remaining</div><div class="value">{{ budget.remaining }}</div></div>
+  </div>
+</div>
+
+<!-- ================= INSIGHTS ================= -->
+<div class="page">
+  <h2 class="section">Insights &amp; Recommendations</h2>
+  <ul class="insights">
+    {% for line in insights %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+  {% if recommendations %}
+  <h3 class="block">Next Steps</h3>
+  <ul class="insights">
+    {% for line in recommendations %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<!-- ================= CLOSING ================= -->
+<div class="page">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:255mm;text-align:center">
+    <div class="cover-brand">TRAFFIC DIGITAL SOLUTIONS</div>
+    <h2 style="color:var(--brand);font-size:20pt;margin:16px 0 0 0">Thank You</h2>
+    <div class="cover-sub">Prepared for {{ client.name }}</div>
+    <div class="footer-note" style="margin-top:24px">reports@trafficdigitalsolutions.com</div>
+  </div>
+</div>
+
+</body>
+</html>
