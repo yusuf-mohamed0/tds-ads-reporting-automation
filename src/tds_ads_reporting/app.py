@@ -29,7 +29,6 @@ def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, email: bool) 
     cfg = load_config()
     client = cfg.client(client_id)
     manual = load_manual_inputs(client_id, month)
-    creds = init_credentials()
 
     if dry_run:
         click.echo(f"[dry-run] {client.name} {month}")
@@ -39,14 +38,21 @@ def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, email: bool) 
         click.echo(f"  google customers: {client.google_ads.customer_ids or []}")
         return
 
+    if no_fetch:
+        pdf = render_pdf(cfg, client, month, manual, None)
+        click.echo(f"wrote {pdf}")
+        if email:
+            send_report(client=client, pdf_path=pdf, month=month)
+        return
+
+    creds = init_credentials()
+
     data = fetch_all(
         meta_token=creds.meta_access_token,
         meta_version=creds.meta_api_version,
         google_yaml=creds.google_ads_yaml,
         client=client,
         month=month,
-        fetch_meta=not no_fetch,
-        fetch_google=not no_fetch,
     )
     pdf = render_pdf(cfg, client, month, manual, data)
     click.echo(f"wrote {pdf}")

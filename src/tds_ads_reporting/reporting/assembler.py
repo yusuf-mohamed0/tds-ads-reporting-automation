@@ -63,12 +63,14 @@ def build_context(
     client: Client,
     month: str,
     manual: ManualInputs,
-    data: FetchedData,
+    data: FetchedData | None,
     month_label: str,
     date_start: str,
     date_stop: str,
 ) -> dict[str, Any]:
     currency = client.currency
+    if data is None:
+        data = FetchedData()
 
     platforms = []
     if client.meta.ad_accounts:

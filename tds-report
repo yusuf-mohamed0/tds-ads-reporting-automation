@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Convenience wrapper: run the report CLI inside the venv.
+set -euo pipefail
+cd "$(dirname "$0")"
+PYTHONPATH=src .venv/bin/python -m tds_ads_reporting.app "$@"
