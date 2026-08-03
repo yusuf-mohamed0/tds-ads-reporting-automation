@@ -202,6 +202,17 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if platform.geo %}
+  <h3 class="block">Followers by Country</h3>
+  <table>
+    <thead><tr><th>Country</th><th class="num">Followers</th></tr></thead>
+    <tbody>
+      {% for row in platform.geo %}
+      <tr><td>{{ row.country }}</td><td class="num">{{ row.value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 </div>
 {% endfor %}
 
@@ -224,8 +235,6 @@
   </table>
 </div>
 {% endfor %}
-
-<!-- ================= BUDGET / SPEND ================= -->
 <div class="page">
   <h2 class="section">Budget &amp; Spend</h2>
   <div class="budget-grid">

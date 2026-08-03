@@ -115,6 +115,7 @@ def build_context(
                 "name": "Facebook",
                 "followers": _fmt_num(data.page.followers_total),
                 "demographics": [{"age": "Total", "female": "-", "male": "-"}],
+                "geo": _geo_rows(data.page.geo),
             }
         )
         if data.top_posts:
@@ -277,3 +278,17 @@ def _demographics_rows(demographics: list[dict]) -> list[dict]:
                 else:
                     rows.append({"age": age, "female": str(breakdown), "male": "-"})
     return rows or [{"age": "-", "female": "-", "male": "-"}]
+
+
+def _geo_rows(geo: list[dict]) -> list[dict]:
+    rows: list[dict] = []
+    for block in geo or []:
+        for v in block.get("values", []):
+            val = v.get("value")
+            if isinstance(val, list):
+                for item in val:
+                    if isinstance(item, dict) and item.get("name"):
+                        rows.append(
+                            {"country": str(item["name"]), "value": f"{item.get('value', 0):,}"}
+                        )
+    return sorted(rows, key=lambda r: r["value"], reverse=True)[:15]
