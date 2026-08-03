@@ -1,0 +1,62 @@
+clients:
+  - id: client_a
+    name: "Client A"
+    report_recipient: "reports@trafficdigitalsolutions.com"
+    language: "en"
+    currency: "EGP"
+    timezone: "Africa/Cairo"
+    monthly_budget: 50000
+    goals:
+      primary: "leads"
+      secondary:
+        - "messages"
+    meta:
+      enabled: true
+      ad_accounts:
+        - id: "act_123456789"
+          label: "Main Meta Account"
+      conversion_actions:
+        leads:
+          - "lead"
+          - "onsite_conversion.lead_grouped"
+        messages:
+          - "onsite_conversion.messaging_conversation_started_7d"
+    google_ads:
+      enabled: true
+      customer_ids:
+        - id: "1234567890"
+          label: "Main Google Ads Account"
+      conversion_actions:
+        leads:
+          - "Lead form submit"
+          - "Phone call lead"
+    report:
+      include_sections:
+        - "executive_summary"
+        - "overall_performance"
+        - "meta_ads"
+        - "google_ads"
+        - "campaign_breakdown"
+        - "recommendations"
+      notes:
+        account_manager: "Traffic Digital Solutions"
+
+  - id: client_b_meta_only
+    name: "Client B Meta Only"
+    report_recipient: "reports@trafficdigitalsolutions.com"
+    language: "en"
+    currency: "EGP"
+    timezone: "Africa/Cairo"
+    goals:
+      primary: "messages"
+    meta:
+      enabled: true
+      ad_accounts:
+        - id: "act_987654321"
+          label: "Main Meta Account"
+      conversion_actions:
+        messages:
+          - "onsite_conversion.messaging_conversation_started_7d"
+    google_ads:
+      enabled: false
+      customer_ids: []
