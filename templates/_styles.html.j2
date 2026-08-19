@@ -4,29 +4,29 @@
     margin: 16mm 14mm 16mm 14mm;
     @bottom-left {
       content: "Traffic Digital Solutions";
-      font-size: 8pt; color: #8a8f98;
+      font-size: 8pt; color: #222124;
     }
     @bottom-center {
       content: "Media Buying Performance Report";
-      font-size: 8pt; color: #8a8f98;
+      font-size: 8pt; color: #222124;
     }
     @bottom-right {
       content: counter(page);
-      font-size: 8pt; color: #8a8f98;
+      font-size: 8pt; color: #222124;
     }
   }
   :root {
-    --brand: #1a1a2e;
-    --brand-soft: #24243d;
-    --accent: #22E6A8;
-    --accent-dim: #14c38e;
-    --ink: #1f2430;
-    --muted: #6b7280;
-    --line: #e5e7eb;
-    --bg-soft: #f4f6f9;
-    --ok: #16a34a;
-    --bad: #dc2626;
-    --warn: #d97706;
+    --brand: #09060B;
+    --brand-soft: #222124;
+    --accent: #B93CFC;
+    --accent-dim: #8109F5;
+    --ink: #09060B;
+    --muted: #222124;
+    --line: #D8CEE0;
+    --bg-soft: #F3EBF5;
+    --ok: #8109F5;
+    --bad: #B93CFC;
+    --warn: #222124;
   }
   * { box-sizing: border-box; }
   body {
@@ -67,7 +67,7 @@
     border-bottom: 3px solid var(--accent); padding-bottom: 4px; margin: 0 0 12px 0;
   }
   h3.block { color: var(--brand); font-size: 11.5pt; margin: 16px 0 6px 0; }
-  .lead { color: #374151; font-size: 10.5pt; line-height: 1.6; margin: 0 0 14px 0; }
+  .lead { color: #09060B; font-size: 10.5pt; line-height: 1.6; margin: 0 0 14px 0; }
   .muted { color: var(--muted); }
   .small { font-size: 8.5pt; }
 
@@ -88,7 +88,7 @@
   /* Budget utilization */
   .util-wrap { margin: 10px 0 4px 0; }
   .util-label { display: flex; justify-content: space-between; font-size: 9pt; margin-bottom: 4px; }
-  .util-track { height: 14px; border-radius: 7px; background: #e8eaee; overflow: hidden; }
+  .util-track { height: 14px; border-radius: 7px; background: #F3EBF5; overflow: hidden; }
   .util-fill { height: 100%; border-radius: 7px; background: var(--accent-dim); }
   .util-fill.over { background: var(--bad); }
 
@@ -103,22 +103,22 @@
   tr { page-break-inside: avoid; }
   tr:nth-child(even) td { background: var(--bg-soft); }
   .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .row-top td { background: #eafaf3; }
-  .row-bottom td { background: #fdf1f1; }
+  .row-top td { background: #F3EBF5; border-left: 3px solid #8109F5; }
+  .row-bottom td { background: #F3EBF5; border-left: 3px solid #B93CFC; }
   .flag { color: var(--bad); font-size: 7.8pt; }
   .cell-sub { display: block; font-size: 6.8pt; color: var(--muted); font-weight: 400; }
 
   /* Share-of-spend bar inside table cells */
   .share { display: flex; align-items: center; gap: 6px; }
-  .share-track { flex: 1; height: 8px; border-radius: 4px; background: #e8eaee; overflow: hidden; }
+  .share-track { flex: 1; height: 8px; border-radius: 4px; background: #F3EBF5; overflow: hidden; }
   .share-fill { height: 100%; background: var(--accent-dim); border-radius: 4px; }
 
   /* ---------- CSS bar charts ---------- */
   .chart { margin: 6px 0 14px 0; }
   .chart-title { font-size: 9.5pt; font-weight: 700; color: var(--brand); margin: 0 0 6px 0; }
   .hbar-row { display: flex; align-items: center; margin: 3px 0; font-size: 8.5pt; }
-  .hbar-label { width: 105px; color: #374151; flex-shrink: 0; }
-  .hbar-track { flex: 1; height: 11px; border-radius: 5px; background: #e8eaee; overflow: hidden; }
+  .hbar-label { width: 105px; color: #09060B; flex-shrink: 0; }
+  .hbar-track { flex: 1; height: 11px; border-radius: 5px; background: #F3EBF5; overflow: hidden; }
   .hbar-fill { height: 100%; background: var(--accent-dim); border-radius: 5px; }
   .hbar-fill.alt { background: var(--brand); }
   .hbar-val { width: 110px; text-align: right; color: var(--muted); font-size: 7.5pt; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -127,7 +127,7 @@
   .conv-bars { margin-top: 6px; }
   .conv-bar-row { display: flex; align-items: center; margin: 2px 0; font-size: 8.3pt; }
   .conv-bar-label { width: 130px; flex-shrink: 0; }
-  .conv-bar-track { flex: 1; height: 10px; background: #e8eaee; border-radius: 5px; overflow: hidden; }
+  .conv-bar-track { flex: 1; height: 10px; background: #F3EBF5; border-radius: 5px; overflow: hidden; }
   .conv-bar-fill { height: 100%; background: var(--brand); border-radius: 5px; }
   .conv-bar-val { width: 60px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
@@ -141,18 +141,18 @@
   .exec-box p { margin: 0; font-size: 10pt; line-height: 1.65; }
   .rec-box {
     border: 1px solid var(--accent-dim); border-left: 5px solid var(--accent-dim);
-    background: #f2fcf8; border-radius: 8px; padding: 12px 16px;
+    background: #F3EBF5; border-radius: 8px; padding: 12px 16px;
     page-break-inside: avoid;
   }
   .rec-box ol { margin: 6px 0 0 0; padding-left: 18px; }
   .rec-box li { margin: 6px 0; font-size: 9.5pt; }
-  .anomaly-box { border: 1px solid #f3d3d3; background: #fdf7f7; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+  .anomaly-box { border: 1px solid #B93CFC; background: #F3EBF5; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
   .anomaly-box ul { margin: 4px 0 0 0; padding-left: 18px; }
-  .anomaly-box li { font-size: 9pt; margin: 3px 0; color: #7c2d2d; }
+  .anomaly-box li { font-size: 9pt; margin: 3px 0; color: #8109F5; }
 
   /* ---------- Misc ---------- */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .prose { background: var(--bg-soft); border-left: 4px solid var(--accent); padding: 10px 12px; color: #374151; line-height: 1.55; border-radius: 0 6px 6px 0; }
+  .prose { background: var(--bg-soft); border-left: 4px solid var(--accent); padding: 10px 12px; color: #09060B; line-height: 1.55; border-radius: 0 6px 6px 0; }
   .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0; }
   .strip-box { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; text-align: center; }
   .strip-box .label { font-size: 7.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
