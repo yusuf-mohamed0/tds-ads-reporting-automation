@@ -93,39 +93,40 @@
   .util-fill.over { background: var(--bad); }
 
   /* ---------- Tables ---------- */
-  table { width: 100%; border-collapse: collapse; margin: 4px 0 12px 0; font-size: 8.8pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 12px 0; font-size: 8.2pt; table-layout: fixed; }
   thead { display: table-header-group; }
   th {
-    background: var(--brand); color: #fff; text-align: left; padding: 6px 8px;
-    font-weight: 600; font-size: 8.3pt; letter-spacing: .3px;
+    background: var(--brand); color: #fff; text-align: left; padding: 5px 6px;
+    font-weight: 600; font-size: 7.8pt; letter-spacing: .2px; word-wrap: break-word;
   }
-  td { border-bottom: 1px solid var(--line); padding: 5px 8px; }
+  td { border-bottom: 1px solid var(--line); padding: 4px 6px; word-wrap: break-word; overflow-wrap: anywhere; }
   tr { page-break-inside: avoid; }
   tr:nth-child(even) td { background: var(--bg-soft); }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .row-top td { background: #eafaf3; }
   .row-bottom td { background: #fdf1f1; }
   .flag { color: var(--bad); font-size: 7.8pt; }
+  .cell-sub { display: block; font-size: 6.8pt; color: var(--muted); font-weight: 400; }
 
   /* Share-of-spend bar inside table cells */
   .share { display: flex; align-items: center; gap: 6px; }
-  .share-track { flex: 1; height: 8px; border-radius: 4px; background: #e8eaee; overflow: hidden; min-width: 60px; }
+  .share-track { flex: 1; height: 8px; border-radius: 4px; background: #e8eaee; overflow: hidden; }
   .share-fill { height: 100%; background: var(--accent-dim); border-radius: 4px; }
 
   /* ---------- CSS bar charts ---------- */
   .chart { margin: 6px 0 14px 0; }
   .chart-title { font-size: 9.5pt; font-weight: 700; color: var(--brand); margin: 0 0 6px 0; }
   .hbar-row { display: flex; align-items: center; margin: 3px 0; font-size: 8.5pt; }
-  .hbar-label { width: 130px; color: #374151; flex-shrink: 0; }
+  .hbar-label { width: 105px; color: #374151; flex-shrink: 0; }
   .hbar-track { flex: 1; height: 11px; border-radius: 5px; background: #e8eaee; overflow: hidden; }
   .hbar-fill { height: 100%; background: var(--accent-dim); border-radius: 5px; }
   .hbar-fill.alt { background: var(--brand); }
-  .hbar-val { width: 175px; text-align: right; color: var(--muted); font-size: 7.5pt; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .hbar-val { width: 110px; text-align: right; color: var(--muted); font-size: 7.5pt; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
   /* Conversions */
   .conv-bars { margin-top: 6px; }
   .conv-bar-row { display: flex; align-items: center; margin: 2px 0; font-size: 8.3pt; }
-  .conv-bar-label { width: 170px; flex-shrink: 0; }
+  .conv-bar-label { width: 130px; flex-shrink: 0; }
   .conv-bar-track { flex: 1; height: 10px; background: #e8eaee; border-radius: 5px; overflow: hidden; }
   .conv-bar-fill { height: 100%; background: var(--brand); border-radius: 5px; }
   .conv-bar-val { width: 60px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }

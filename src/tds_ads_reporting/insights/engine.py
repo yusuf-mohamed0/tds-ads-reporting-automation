@@ -309,7 +309,7 @@ def generate_insights(
     # ---- anomalies + recommendations -------------------------------------
     anomalies = _build_anomalies(dataset, totals, campaigns, mom, budget_amount, budget_utilization, currency)
     recommendations = _build_recommendations(
-        dataset, campaigns, top_campaigns, bottom_campaigns, anomalies, budget_utilization, cpr, currency
+        dataset, campaigns, top_campaigns, bottom_campaigns, anomalies, budget_utilization, budget_amount, cpr, currency
     )
 
     # ---- executive summary ------------------------------------------------
@@ -544,6 +544,7 @@ def _build_recommendations(
     bottom_campaigns: list[dict[str, Any]],
     anomalies: list[str],
     budget_utilization: float,
+    budget_amount: float,
     overall_cpr: float,
     currency: str,
 ) -> list[str]:
@@ -569,15 +570,17 @@ def _build_recommendations(
         if c.frequency and c.frequency > 4.0:
             out.append(f"Refresh creative in '{c.campaign_name}' to reduce frequency ({c.frequency:.1f})")
 
-    # Publisher shift
+    # Publisher shift (ignore unknown/other labels)
     if dataset.publishers and len(dataset.publishers) > 1:
-        top_pub = dataset.publishers[0]
-        bottom_pub = dataset.publishers[-1]
-        if top_pub.get("pct", 0) > bottom_pub.get("pct", 0) + 20:
-            out.append(
-                f"Shift budget toward {top_pub['label']} ({top_pub['pct']:.0f}% of spend) and away from "
-                f"{bottom_pub['label']} ({bottom_pub['pct']:.0f}%)"
-            )
+        known = [p for p in dataset.publishers if str(p.get("label", "")).lower() not in ("unknown", "other", "")]
+        if len(known) >= 2:
+            top_pub = known[0]
+            bottom_pub = known[-1]
+            if top_pub.get("pct", 0) > bottom_pub.get("pct", 0) + 20:
+                out.append(
+                    f"Shift budget toward {top_pub['label']} ({top_pub['pct']:.0f}% of spend) and away from "
+                    f"{bottom_pub['label']} ({bottom_pub['pct']:.0f}%)"
+                )
 
     # Demographic winner
     if dataset.demographics:
@@ -594,12 +597,6 @@ def _build_recommendations(
             f"Expand geo targeting toward {top_country['label']} ({top_country['pct']:.0f}% of spend)"
         )
 
-    # Budget pacing
-    if budget_utilization < 50:
-        out.append(f"Increase spend to reach the monthly budget — only {budget_utilization:.0f}% utilized")
-    elif budget_utilization > 100:
-        out.append(f"Review the monthly budget — spend exceeded it by {budget_utilization - 100:.0f}%")
-
     # Adset scaling
     if dataset.adsets:
         top_adset = dataset.adsets[0]
@@ -608,6 +605,58 @@ def _build_recommendations(
                 f"Duplicate or scale adset '{top_adset['adset_name']}' "
                 f"({top_adset['results']} results at {_fmt_money(top_adset.get('cost_per_result') or 0, currency)} each)"
             )
+
+    # Platform efficiency: reallocate between FB and IG based on cost per result
+    if dataset.platforms and len(dataset.platforms) > 1:
+        ranked = sorted(dataset.platforms.values(), key=lambda x: float(x.get("cpr") or 1e9))
+        best = ranked[0]
+        worst = ranked[-1]
+        best_cpr = float(best.get("cpr") or 0.0)
+        worst_cpr = float(worst.get("cpr") or 0.0)
+        if best_cpr and worst_cpr and best_cpr > 0 and worst_cpr > best_cpr * 1.5:
+            out.append(
+                f"{best['platform'].capitalize()} is more efficient (CPR {best_cpr:.2f} vs "
+                f"{worst_cpr:.2f} on {worst['platform'].capitalize()}) — shift a tested share of budget "
+                f"toward {best['platform'].capitalize()} while watching delivery"
+            )
+
+    # Creative fatigue: high frequency with high CPM usually means fatigued creative
+    if campaigns:
+        fatigued = [c for c in campaigns if (c.frequency or 0) > 4.0]
+        if fatigued:
+            worst_f = max(fatigued, key=lambda c: c.frequency)
+            out.append(
+                f"Refresh creative in '{worst_f.campaign_name}' — frequency {worst_f.frequency:.1f} "
+                f"with CPM {_fmt_money(worst_f.cpm, currency)} signals audience fatigue"
+            )
+
+    # Cost inflation: CPC/CPM rising means the auction got more expensive
+    mom_cpm = (dataset.prev_month or {}).get("totals", {}).get("cpm")
+    if mom_cpm and dataset.totals and float(mom_cpm) > 0:
+        cur_cpm = float(dataset.totals.get("cpm") or 0.0)
+        if cur_cpm > float(mom_cpm) * 1.2:
+            out.append(
+                f"CPM rose to {_fmt_money(cur_cpm, currency)} from {_fmt_money(float(mom_cpm), currency)} — "
+                f"audience/creative refresh or broadened targeting will defend efficiency"
+            )
+
+    # Zero-results in a lead/message objective is a funnel or offer problem, not delivery
+    for c in campaigns:
+        if c.results == 0 and c.spend > 0 and c.objective and ("LEAD" in c.objective.upper() or "CONVERS" in c.objective.upper()):
+            out.append(
+                f"'{c.campaign_name}' is delivering impressions but zero results — before pausing, audit "
+                f"the landing page/offer and tracking (pixel events), then relaunch a fresh ad"
+            )
+            break
+
+    # Under-utilized budget: pacing problem (only when a budget is actually set)
+    if budget_amount and budget_utilization < 50:
+        out.append(
+            f"Increase spend to reach the monthly budget — only {budget_utilization:.0f}% utilized; "
+            f"raise bids or add placements/audiences to improve delivery"
+        )
+    elif budget_amount and budget_utilization > 100:
+        out.append(f"Review the monthly budget — spend exceeded it by {budget_utilization - 100:.0f}%")
 
     return out[:8]
 

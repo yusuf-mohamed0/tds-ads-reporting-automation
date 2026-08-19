@@ -198,18 +198,17 @@
     All campaigns for {{ month_label | default('') }}. MoM column shows spend change vs {{ prev_month_label | default('the previous month') }}.
   </p>
   <table>
+    <colgroup>
+      <col style="width:34%"><col style="width:9%"><col style="width:11%"><col style="width:12%"><col style="width:11%"><col style="width:8%"><col style="width:9%"><col style="width:6%">
+    </colgroup>
     <thead>
       <tr>
         <th>Campaign</th>
-        <th>Objective</th>
         <th>Run</th>
         <th class="num">Spend</th>
         <th class="num">Results</th>
         <th class="num">CPR</th>
         <th class="num">CTR</th>
-        <th class="num">CPC</th>
-        <th class="num">CPM</th>
-        <th class="num">Freq</th>
         <th>Share of Spend</th>
         <th class="num">MoM</th>
       </tr>
@@ -221,8 +220,8 @@
           {{ row.name }}
           {% if row.is_top %}<span class="badge top">TOP</span>{% endif %}
           {% if row.is_bottom %}<span class="badge bottom">WEAK</span>{% endif %}
+          <span class="cell-sub">{{ row.objective | default('-') }} &middot; CPC {{ row.cpc | default(0) }} &middot; CPM {{ row.cpm | default(0) }} &middot; Freq {{ row.frequency | default(0) }}</span>
         </td>
-        <td>{{ row.objective | default('-') }}</td>
         <td>
           {% if row.lifecycle == 'carried-over' %}<span class="badge top">CARRIED OVER</span>
           {% elif row.lifecycle == 'new' %}<span class="badge top">NEW</span>
@@ -233,9 +232,6 @@
         <td class="num">{{ row.results }}<span class="cell-sub">{{ row.results_label | default('Results') }}</span></td>
         <td class="num">{{ row.cpr_fmt }}</td>
         <td class="num">{{ row.ctr }}%</td>
-        <td class="num">{{ row.cpc }}</td>
-        <td class="num">{{ row.cpm }}</td>
-        <td class="num">{{ row.frequency }}</td>
         <td>
           <div class="share">
             <div class="share-track"><div class="share-fill" style="width: {{ row.bar_width | default(0) }}%"></div></div>
@@ -269,6 +265,9 @@
     MoM columns compare each platform against {{ prev_month_label | default('the previous month') }}.
   </p>
   <table>
+    <colgroup>
+      <col style="width:16%"><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:8%"><col style="width:5%">
+    </colgroup>
     <thead>
       <tr>
         <th>Platform</th>
@@ -277,20 +276,16 @@
         <th class="num">Results</th>
         <th class="num">MoM</th>
         <th class="num">CPR</th>
-        <th class="num">MoM</th>
-        <th class="num">Conversions</th>
         <th class="num">Impressions</th>
         <th class="num">Reach</th>
         <th class="num">CTR</th>
-        <th class="num">CPC</th>
-        <th class="num">Freq</th>
         <th class="num">Share</th>
       </tr>
     </thead>
     <tbody>
       {% for p in plats %}
       <tr>
-        <td><strong>{{ p.label }}</strong></td>
+        <td><strong>{{ p.label }}</strong><span class="cell-sub">CPC {{ p.cpc | default(0) }} &middot; Freq {{ p.frequency | default(0) }} &middot; Conv {{ p.conversions_total | default(0) }}</span></td>
         <td class="num">{{ p.spend_fmt }}</td>
         <td class="num">
           {% if p.mom_spend_pct is not none %}
@@ -306,18 +301,9 @@
           {% else %}&mdash;{% endif %}
         </td>
         <td class="num">{{ p.cpr | round(2) }}</td>
-        <td class="num">
-          {% if p.mom_cpr_pct is not none %}
-            {% if p.mom_cpr_pct > 0 %}<span class="delta-arrow down">&#9650;</span>{% elif p.mom_cpr_pct < 0 %}<span class="delta-arrow up">&#9660;</span>{% endif %}
-            {{ p.mom_cpr_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ p.conversions_total | default(0) }}</td>
         <td class="num">{{ p.impressions }}</td>
         <td class="num">{{ p.reach }}</td>
         <td class="num">{{ p.ctr }}%</td>
-        <td class="num">{{ p.cpc }}</td>
-        <td class="num">{{ p.frequency }}</td>
         <td class="num">{{ p.share_pct }}%</td>
       </tr>
       {% endfor %}
@@ -368,24 +354,23 @@
 
   <h3 class="block">Campaign-level Comparison</h3>
   <table>
+    <colgroup>
+      <col style="width:34%"><col style="width:12%"><col style="width:14%"><col style="width:10%"><col style="width:15%"><col style="width:15%">
+    </colgroup>
     <thead>
       <tr>
         <th>Campaign</th>
         <th>Run</th>
-        <th class="num">Spend</th>
+        <th class="num">Last Month Spend</th>
         <th class="num">Spend MoM</th>
-        <th class="num">Results</th>
+        <th class="num">Last Month Results</th>
         <th class="num">Results MoM</th>
-        <th class="num">CPR</th>
-        <th class="num">CPR MoM</th>
-        <th class="num">Impressions</th>
-        <th class="num">CTR MoM</th>
       </tr>
     </thead>
     <tbody>
       {% for cid, c in mom_camps.items() %}
       <tr>
-        <td>{{ c.name }}</td>
+        <td>{{ c.name }}<span class="cell-sub">CPR {{ c.cpr_prev | round(2) if c.cpr_prev else '-' }} &middot; Impr {{ c.impressions_prev if c.impressions_prev else '-' }} &middot; CTR MoM {{ c.ctr_delta_pct | abs ~ '%' if c.ctr_delta_pct is not none else '-' }}</span></td>
         <td>{{ c.lifecycle | default('-') }}</td>
         <td class="num">{{ c.spend_prev | round(0) if c.spend_prev else 'new' }}</td>
         <td class="num">
@@ -399,20 +384,6 @@
           {% if c.results_delta_pct is not none %}
             {% if c.results_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.results_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
             {{ c.results_delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ c.cpr_prev | round(2) if c.cpr_prev else '-' }}</td>
-        <td class="num">
-          {% if c.cpr_delta_pct is not none %}
-            {% if c.cpr_delta_pct > 0 %}<span class="delta-arrow down">&#9650;</span>{% elif c.cpr_delta_pct < 0 %}<span class="delta-arrow up">&#9660;</span>{% endif %}
-            {{ c.cpr_delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ c.impressions_prev if c.impressions_prev else '-' }}</td>
-        <td class="num">
-          {% if c.ctr_delta_pct is not none %}
-            {% if c.ctr_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.ctr_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ c.ctr_delta_pct | abs }}%
           {% else %}&mdash;{% endif %}
         </td>
       </tr>
@@ -695,7 +666,7 @@
 <!-- ================= RECOMMENDATIONS ================= -->
 {% if 'recommendations' in sections and (recommendations | default([])) %}
 <div class="page">
-  <h2 class="section">Recommendations</h2>
+  <h2 class="section">Recommendations &mdash; Priority Actions for Next Month</h2>
   <div class="rec-box">
     <strong style="color: var(--accent-dim); text-transform: uppercase; letter-spacing: 1px;">Priority Actions for Next Month</strong>
     <ol>
