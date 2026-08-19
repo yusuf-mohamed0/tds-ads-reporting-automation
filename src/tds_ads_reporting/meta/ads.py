@@ -9,9 +9,17 @@ log = logging.getLogger("tds.meta.ads")
 
 
 def month_range(month: str) -> tuple[str, str]:
+    """Inclusive [since, until] date bounds for a YYYY-MM month.
+
+    Meta's Ads Insights time_range treats both `since` and `until` as inclusive
+    dates. Using the first day of the NEXT month as `until` would leak one day
+    of the following month into every report, so we use the last day of the
+    reported month.
+    """
     year, mon = (int(x) for x in month.split("-"))
+    last = calendar.monthrange(year, mon)[1]
     since = date(year, mon, 1).isoformat()
-    until = date(year + (1 if mon == 12 else 0), 1 if mon == 12 else mon + 1, 1).isoformat()
+    until = date(year, mon, last).isoformat()
     return since, until
 
 
@@ -56,6 +64,9 @@ class CampaignRow:
     campaign_name: str
     objective: str = ""
     status: str = ""
+    effective_status: str = ""
+    start_time: str = ""
+    stop_time: str = ""
     results: int = 0
     cost_per_result: float = 0.0
     spend: float = 0.0
@@ -68,6 +79,7 @@ class CampaignRow:
     inline_link_clicks: int = 0
     currency: str = "EGP"
     actions: list[dict] = field(default_factory=list)
+    lifecycle: str = ""
 
     @property
     def clicks(self) -> int:
@@ -120,6 +132,9 @@ class MetaAdsDataset:
     hour_pacing: dict[str, dict] = field(default_factory=dict)
     daily_spend: list[dict] = field(default_factory=list)
     totals: dict[str, float] = field(default_factory=dict)
+    account_totals: dict[str, float] = field(default_factory=dict)
+    platforms: dict[str, dict] = field(default_factory=dict)
+    platform_conversions: dict[str, dict] = field(default_factory=dict)
     prev_month: dict = field(default_factory=dict)
 
     @property
@@ -222,7 +237,7 @@ def _get_insights(
 
 
 def _get_campaigns(access_token: str, api_version: str, ad_account_id: str) -> list[dict]:
-    """Fetch campaign objects (id/name/status) to enrich the campaign table."""
+    """Fetch campaign objects (id/name/status/dates) to enrich the campaign table."""
     from facebook_business.adobjects.adaccount import AdAccount
     from facebook_business.api import FacebookAdsApi
 
@@ -231,7 +246,9 @@ def _get_campaigns(access_token: str, api_version: str, ad_account_id: str) -> l
 
     FacebookAdsApi.init(access_token=access_token, api_version=api_version)
     account = AdAccount(ad_account_id)
-    response = account.get_campaigns(fields=["id", "name", "status"])
+    response = account.get_campaigns(
+        fields=["id", "name", "status", "effective_status", "objective", "start_time", "stop_time"]
+    )
     return _rows_from_response(response)
 
 
@@ -295,6 +312,9 @@ def _attach_statuses(access_token: str, api_version: str, ad_account_id: str, ca
         cid = str(data.get("id", ""))
         if cid in by_id:
             by_id[cid].status = str(data.get("status", ""))
+            by_id[cid].effective_status = str(data.get("effective_status", "") or data.get("status", ""))
+            by_id[cid].start_time = str(data.get("start_time", "") or "")
+            by_id[cid].stop_time = str(data.get("stop_time", "") or "")
 
 
 def _fetch_adsets(access_token: str, api_version: str, ad_account_id: str, month: str) -> list[dict]:
@@ -519,13 +539,146 @@ def _fetch_daily_spend(access_token: str, api_version: str, ad_account_id: str, 
     return out
 
 
+def _fetch_account_totals(access_token: str, api_version: str, ad_account_id: str, month: str) -> dict[str, float]:
+    """Account-level insights for the month (unique reach/frequency, not summed)."""
+    since, until = month_range(month)
+    rows = _get_insights(
+        access_token,
+        api_version,
+        ad_account_id,
+        [
+            "spend",
+            "results",
+            "impressions",
+            "reach",
+            "frequency",
+            "ctr",
+            "cpc",
+            "cpm",
+            "inline_link_clicks",
+        ],
+        {
+            "level": "account",
+            "time_range": {"since": since, "until": until},
+            "use_unified_attribution_setting": True,
+        },
+    )
+    if not rows:
+        return {}
+    data = rows[0]
+    clicks = parse_int(data.get("inline_link_clicks")) or round(parse_float(data.get("impressions")) * parse_float(data.get("ctr")) / 100)
+    return {
+        "spend": round(parse_float(data.get("spend")), 2),
+        "results": parse_int(data.get("results")),
+        "impressions": parse_int(data.get("impressions")),
+        "reach": parse_int(data.get("reach")),
+        "clicks": clicks,
+        "ctr": parse_float(data.get("ctr")),
+        "cpc": parse_float(data.get("cpc")),
+        "cpm": parse_float(data.get("cpm")),
+        "frequency": parse_float(data.get("frequency")),
+        "cpr": round(parse_float(data.get("spend")) / parse_int(data.get("results")), 2) if parse_int(data.get("results")) else 0.0,
+    }
+
+
+def _fetch_platform_metrics(access_token: str, api_version: str, ad_account_id: str, month: str) -> dict[str, dict]:
+    """Per-publisher-platform metrics at ACCOUNT level (deduped reach/frequency)."""
+    since, until = month_range(month)
+    rows = _get_insights(
+        access_token,
+        api_version,
+        ad_account_id,
+        BREAKDOWN_FIELDS,
+        {
+            "level": "account",
+            "time_range": {"since": since, "until": until},
+            "breakdowns": ["publisher_platform"],
+            "use_unified_attribution_setting": True,
+        },
+    )
+    out: dict[str, dict] = {}
+    total_spend = 0.0
+    for data in rows:
+        label = str(data.get("publisher_platform", "") or "").lower()
+        if not label:
+            continue
+        entry = {
+            "platform": label,
+            "spend": round(parse_float(data.get("spend")), 2),
+            "results": parse_int(data.get("results")),
+            "impressions": parse_int(data.get("impressions")),
+            "reach": parse_int(data.get("reach")),
+            "clicks": parse_int(data.get("inline_link_clicks")),
+            "ctr": parse_float(data.get("ctr")),
+            "cpc": parse_float(data.get("cpc")),
+            "cpm": parse_float(data.get("cpm")),
+            "frequency": parse_float(data.get("frequency")),
+        }
+        entry["cpr"] = round(entry["spend"] / entry["results"], 2) if entry["results"] else 0.0
+        out[label] = entry
+        total_spend += entry["spend"]
+    for entry in out.values():
+        entry["pct"] = round(entry["spend"] / total_spend * 100, 1) if total_spend else 0.0
+    return out
+
+
+def _fetch_platform_conversions(
+    access_token: str, api_version: str, ad_account_id: str, month: str
+) -> dict[str, dict]:
+    """Per-publisher-platform conversions (actions + cost per action type)."""
+    since, until = month_range(month)
+    rows = _get_insights(
+        access_token,
+        api_version,
+        ad_account_id,
+        ["actions", "cost_per_action_type"],
+        {
+            "level": "account",
+            "time_range": {"since": since, "until": until},
+            "breakdowns": ["publisher_platform"],
+            "use_unified_attribution_setting": True,
+        },
+    )
+    platforms: dict[str, dict] = {}
+    for data in rows:
+        platform = str(data.get("publisher_platform", "") or "").lower()
+        if not platform:
+            continue
+        cost_by_type: dict[str, float] = {}
+        for item in data.get("cost_per_action_type") or []:
+            at = str(item.get("action_type", ""))
+            if at:
+                cost_by_type[at] = parse_float(item.get("value"))
+        actions: dict[str, dict] = {}
+        for item in data.get("actions") or []:
+            at = str(item.get("action_type", ""))
+            count = parse_float(item.get("value"))
+            if not at or count <= 0:
+                continue
+            entry = actions.setdefault(at, {"count": 0.0, "cost": 0.0, "cpa": 0.0})
+            entry["count"] += count
+            entry["cost"] += cost_by_type.get(at, 0.0)
+        for at, entry in actions.items():
+            entry["cpa"] = round(entry["cost"] / entry["count"], 2) if entry["count"] else 0.0
+            entry["count"] = int(round(entry["count"]))
+            entry["cost"] = round(entry["cost"], 2)
+        platforms[platform] = {"actions": actions, "total": sum(v["count"] for v in actions.values())}
+    return platforms
+
+
 def _fetch_prev_month(access_token: str, api_version: str, ad_account_id: str, month: str) -> dict:
     prev = prev_month_str(month)
     summary = fetch_campaign_insights(access_token, api_version, ad_account_id, prev)
     totals = _compute_totals_from_campaigns(summary.campaigns)
+    platforms: dict[str, dict] = {}
+    try:
+        platforms = _fetch_platform_metrics(access_token, api_version, ad_account_id, prev)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("meta previous-month platform metrics failed for %s %s: %s", ad_account_id, prev, exc)
     return {
         "month": prev,
         "totals": totals,
+        "platforms": platforms,
         "campaigns": [
             {
                 "campaign_id": c.campaign_id,
@@ -535,7 +688,7 @@ def _fetch_prev_month(access_token: str, api_version: str, ad_account_id: str, m
                 "impressions": c.impressions,
                 "reach": c.reach,
                 "ctr": c.ctr,
-                "cpr": c.cost_per_result,
+                "cpr": c.cost_per_result or (round(c.spend / c.results, 2) if c.results else 0.0),
             }
             for c in summary.campaigns
         ],
@@ -630,7 +783,30 @@ def fetch_meta_dataset(access_token: str, api_version: str, ad_account_id: str, 
     except Exception as exc:  # noqa: BLE001
         log.warning("meta daily spend failed for %s %s: %s", ad_account_id, month, exc)
 
+    try:
+        dataset.account_totals = _fetch_account_totals(access_token, api_version, ad_account_id, month)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("meta account totals failed for %s %s: %s", ad_account_id, month, exc)
+
+    try:
+        dataset.platforms = _fetch_platform_metrics(access_token, api_version, ad_account_id, month)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("meta platform metrics failed for %s %s: %s", ad_account_id, month, exc)
+
+    try:
+        dataset.platform_conversions = _fetch_platform_conversions(access_token, api_version, ad_account_id, month)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("meta platform conversions failed for %s %s: %s", ad_account_id, month, exc)
+
+    # Additive metrics (spend, results, impressions, clicks) come from campaign
+    # sums — they are reliable across mixed-objective accounts. Reach and
+    # frequency are NOT additive (people can see multiple campaigns), so we
+    # take the deduplicated account-level values when available.
     dataset.totals = _compute_totals(dataset)
+    if dataset.account_totals:
+        at = dataset.account_totals
+        dataset.totals["reach"] = int(at.get("reach") or 0)
+        dataset.totals["frequency"] = round(dataset.totals["impressions"] / dataset.totals["reach"], 2) if dataset.totals["reach"] else 0.0
 
     try:
         dataset.prev_month = _fetch_prev_month(access_token, api_version, ad_account_id, month)

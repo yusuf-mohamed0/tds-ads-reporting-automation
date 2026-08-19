@@ -123,6 +123,8 @@ def _deserialize(data: dict, platform: str):
 
 
 def _fmt_money(value: float, currency: str) -> str:
+    if value and abs(value) < 1:
+        return f"{value:,.2f} {currency}"
     return f"{value:,.0f} {currency}"
 
 
@@ -150,6 +152,7 @@ def _campaign_table_rows(
     rows = []
     for c in dataset.campaigns:
         spend_share = round(c.spend / total_spend * 100, 1) if total_spend else 0.0
+        cpr = c.cost_per_result or (round(c.spend / c.results, 2) if c.results else 0.0)
         prev_spend = float(prev_campaigns.get(c.campaign_id, {}).get("spend") or 0.0)
         mom_spend_delta_pct = round((c.spend - prev_spend) / prev_spend * 100, 1) if prev_spend else None
         rows.append(
@@ -158,11 +161,15 @@ def _campaign_table_rows(
                 "name": c.campaign_name,
                 "objective": c.objective,
                 "status": c.status or "-",
+                "effective_status": c.effective_status or c.status or "-",
+                "lifecycle": c.lifecycle or "-",
+                "start_time": c.start_time,
+                "stop_time": c.stop_time,
                 "spend": c.spend,
                 "spend_fmt": f"{c.spend:,.0f}",
                 "results": c.results,
-                "cpr": c.cost_per_result,
-                "cpr_fmt": f"{c.cost_per_result:,.0f}",
+                "cpr": cpr,
+                "cpr_fmt": f"{cpr:,.0f}",
                 "ctr": c.ctr,
                 "cpc": c.cpc,
                 "cpm": c.cpm,
@@ -475,7 +482,7 @@ def build_context(
                     {
                         "name": c.campaign_name,
                         "results": _fmt_num(c.results),
-                        "cost_per_result": _fmt_money(c.cost_per_result, currency),
+                        "cost_per_result": _fmt_money(c.cost_per_result or (round(c.spend / c.results, 2) if c.results else 0.0), currency),
                         "spend": _fmt_money(c.spend, currency),
                         "impressions": _fmt_num(c.impressions),
                         "reach": _fmt_num(c.reach),
@@ -489,6 +496,8 @@ def build_context(
     mom = insights_payload.get("mom") or {}
     pacing = insights_payload.get("pacing") or {}
     recommendations = insights_payload.get("recommendations") or manual.recommendations
+    platform_rows = insights_payload.get("platforms") or []
+    data_quality = insights_payload.get("data_quality") or []
 
     budget = {
         "amount": _fmt_money(manual.budget.get("amount", 0), currency),
@@ -553,6 +562,8 @@ def build_context(
         "top_adsets": top_adsets,
         "pacing": pacing,
         "mom": mom,
+        "platforms": platform_rows,
+        "data_quality": data_quality,
         "prev_month_label": prev_month_label,
         "has_meta": dataset is not None,
         "has_page": data.page is not None,

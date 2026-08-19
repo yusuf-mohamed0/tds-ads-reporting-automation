@@ -9,6 +9,8 @@
 {% set sections = include_sections | default([]) %}
 {% set k = kpis | default({}) %}
 {% set pace = pacing | default({}) %}
+{% set plats = platforms | default([]) %}
+{% set mom_camps = mom.campaigns | default({}) %}
 
 <!-- ================= COVER ================= -->
 <div class="page">
@@ -25,6 +27,7 @@
       <div class="cover-meta">
         <div><strong>Reporting Period:</strong> {{ date_start | default('') }} &mdash; {{ date_stop | default('') }}</div>
         <div><strong>Platforms:</strong> {{ platforms_label | default('-') }}</div>
+        <div><strong>Data Source:</strong> Meta Ads Manager / Meta Business Suite (Meta Marketing API)</div>
         <div><strong>Prepared by:</strong> Traffic Digital Solutions</div>
         <div class="muted"><strong>Prepared on:</strong> {{ report_date | default('') }}</div>
       </div>
@@ -41,6 +44,7 @@
   {% set toc_items = [] %}
   {% if 'executive_summary' in sections and (executive_summary | default('') or k) %}{% set _ = toc_items.append('Executive Summary') %}{% endif %}
   {% if 'campaign_performance' in sections and (campaigns | default([])) %}{% set _ = toc_items.append('Campaign Performance') %}{% endif %}
+  {% if plats %}{% set _ = toc_items.append('Platform Performance (Facebook vs Instagram)') %}{% endif %}
   {% if 'conversions' in sections and (conversions | default([])) %}{% set _ = toc_items.append('Conversion Breakdown') %}{% endif %}
   {% if 'distribution' in sections and (publishers | default([]) or devices | default([]) or countries | default([])) %}{% set _ = toc_items.append('Distribution') %}{% endif %}
   {% if 'audience' in sections and (demographics | default([]) or dow_pacing | default([]) or age_gender | default({})) %}{% set _ = toc_items.append('Audience Insights') %}{% endif %}
@@ -172,7 +176,7 @@
       <tr>
         <th>Campaign</th>
         <th>Objective</th>
-        <th>Status</th>
+        <th>Run</th>
         <th class="num">Spend</th>
         <th class="num">Results</th>
         <th class="num">CPR</th>
@@ -193,7 +197,12 @@
           {% if row.is_bottom %}<span class="badge bottom">WEAK</span>{% endif %}
         </td>
         <td>{{ row.objective | default('-') }}</td>
-        <td>{{ row.status | default('-') }}</td>
+        <td>
+          {% if row.lifecycle == 'carried-over' %}<span class="badge top">CARRIED OVER</span>
+          {% elif row.lifecycle == 'new' %}<span class="badge top">NEW</span>
+          {% elif row.lifecycle == 'ended' %}<span class="badge bottom">ENDED</span>
+          {% else %}{{ row.status | default('-') }}{% endif %}
+        </td>
         <td class="num">{{ row.spend_fmt }}</td>
         <td class="num">{{ row.results }}</td>
         <td class="num">{{ row.cpr_fmt }}</td>
@@ -222,6 +231,205 @@
     CPC = cost per click; CPM = cost per 1,000 impressions; Freq = average frequency.
     "TOP" marks the best performers by results, "WEAK" marks the weakest with flags on cost, frequency or zero results.
   </p>
+</div>
+{% endif %}
+
+<!-- ================= PLATFORM PERFORMANCE (FB vs IG) ================= -->
+{% if plats %}
+<div class="page">
+  <h2 class="section">Platform Performance &mdash; Facebook vs Instagram</h2>
+  <p class="lead muted">
+    Insights per platform for {{ month_label | default('') }}, split by Meta publisher platform (deduplicated reach).
+    MoM columns compare each platform against {{ prev_month_label | default('the previous month') }}.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th class="num">Spend</th>
+        <th class="num">MoM</th>
+        <th class="num">Results</th>
+        <th class="num">MoM</th>
+        <th class="num">CPR</th>
+        <th class="num">MoM</th>
+        <th class="num">Conversions</th>
+        <th class="num">Impressions</th>
+        <th class="num">Reach</th>
+        <th class="num">CTR</th>
+        <th class="num">CPC</th>
+        <th class="num">Freq</th>
+        <th class="num">Share</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in plats %}
+      <tr>
+        <td><strong>{{ p.label }}</strong></td>
+        <td class="num">{{ p.spend_fmt }}</td>
+        <td class="num">
+          {% if p.mom_spend_pct is not none %}
+            {% if p.mom_spend_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif p.mom_spend_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ p.mom_spend_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ p.results_fmt }}</td>
+        <td class="num">
+          {% if p.mom_results_pct is not none %}
+            {% if p.mom_results_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif p.mom_results_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ p.mom_results_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ p.cpr | round(2) }}</td>
+        <td class="num">
+          {% if p.mom_cpr_pct is not none %}
+            {% if p.mom_cpr_pct > 0 %}<span class="delta-arrow down">&#9650;</span>{% elif p.mom_cpr_pct < 0 %}<span class="delta-arrow up">&#9660;</span>{% endif %}
+            {{ p.mom_cpr_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ p.conversions_total | default(0) }}</td>
+        <td class="num">{{ p.impressions }}</td>
+        <td class="num">{{ p.reach }}</td>
+        <td class="num">{{ p.ctr }}%</td>
+        <td class="num">{{ p.cpc }}</td>
+        <td class="num">{{ p.frequency }}</td>
+        <td class="num">{{ p.share_pct }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if plats | length == 1 %}
+  <p class="small muted">Only one publisher platform had activity this month; check audience and placement settings to activate the other platform.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ================= MONTH-OVER-MONTH COMPARISON ================= -->
+{% if mom and (mom_camps or mom.new_campaigns or mom.stopped_campaigns or mom.carried_over) %}
+<div class="page">
+  <h2 class="section">Month-over-Month Comparison</h2>
+  <p class="lead muted">
+    Full comparison between {{ month_label | default('this month') }} and {{ prev_month_label | default('the previous month') }}.
+  </p>
+
+  <h3 class="block">Total KPIs</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>KPI</th>
+        <th class="num">{{ month_label | default('Current') }}</th>
+        <th class="num">{{ prev_month_label | default('Previous') }}</th>
+        <th class="num">Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, label in [('spend','Spend'), ('results','Results'), ('impressions','Impressions'), ('reach','Reach'), ('clicks','Clicks'), ('ctr','CTR'), ('cpc','CPC'), ('cpm','CPM'), ('cpr','Cost per Result'), ('frequency','Frequency')] %}
+      {% if mom[key] is defined %}
+      <tr>
+        <td>{{ label }}</td>
+        <td class="num">{{ mom[key].current | round(2) }}</td>
+        <td class="num">{{ mom[key].previous | round(2) if mom[key].previous is not none else '&mdash;' }}</td>
+        <td class="num">
+          {% if mom[key].delta_pct is not none %}
+            {% if mom[key].delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif mom[key].delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ mom[key].delta_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3 class="block">Campaign-level Comparison</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Campaign</th>
+        <th>Run</th>
+        <th class="num">Spend</th>
+        <th class="num">Spend MoM</th>
+        <th class="num">Results</th>
+        <th class="num">Results MoM</th>
+        <th class="num">CPR</th>
+        <th class="num">CPR MoM</th>
+        <th class="num">Impressions</th>
+        <th class="num">CTR MoM</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cid, c in mom_camps.items() %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.lifecycle | default('-') }}</td>
+        <td class="num">{{ c.spend_prev | round(0) if c.spend_prev else 'new' }}</td>
+        <td class="num">
+          {% if c.spend_delta_pct is not none %}
+            {% if c.spend_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.spend_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ c.spend_delta_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ c.results_prev if c.results_prev else '-' }}</td>
+        <td class="num">
+          {% if c.results_delta_pct is not none %}
+            {% if c.results_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.results_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ c.results_delta_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ c.cpr_prev | round(2) if c.cpr_prev else '-' }}</td>
+        <td class="num">
+          {% if c.cpr_delta_pct is not none %}
+            {% if c.cpr_delta_pct > 0 %}<span class="delta-arrow down">&#9650;</span>{% elif c.cpr_delta_pct < 0 %}<span class="delta-arrow up">&#9660;</span>{% endif %}
+            {{ c.cpr_delta_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="num">{{ c.impressions_prev if c.impressions_prev else '-' }}</td>
+        <td class="num">
+          {% if c.ctr_delta_pct is not none %}
+            {% if c.ctr_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.ctr_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
+            {{ c.ctr_delta_pct | abs }}%
+          {% else %}&mdash;{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if mom.carried_over %}
+  <h3 class="block">Campaigns Carried Over From Previous Month (Still Running)</h3>
+  <p class="small">These older campaigns were active before this month and kept running &mdash; their results are included in the totals above.</p>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th></tr></thead>
+    <tbody>
+      {% for c in mom.carried_over %}
+      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if mom.new_campaigns %}
+  <h3 class="block">New Campaigns This Month</h3>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th></tr></thead>
+    <tbody>
+      {% for c in mom.new_campaigns %}
+      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if mom.stopped_campaigns %}
+  <h3 class="block">Campaigns That Stopped (Previous Month Only)</h3>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Last Month Spend</th><th class="num">Last Month Results</th></tr></thead>
+    <tbody>
+      {% for c in mom.stopped_campaigns %}
+      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -484,8 +692,10 @@
 
   <h3 class="block">Methodology</h3>
   <p class="small">
-    All Meta figures come from the Facebook Marketing API (facebook-business SDK {{ 'v25' }}), Ads Insights endpoint at campaign and adset level,
-    attributed with Meta's unified attribution setting for the period {{ date_start | default('') }} &mdash; {{ date_stop | default('') }}.
+    All advertising figures were collected directly from <strong>Meta Ads Manager / Meta Business Suite</strong>
+    through the Meta Marketing API (facebook-business SDK). Campaign and adset performance, conversions,
+    distribution and audience data come from the Ads Insights endpoint at campaign and adset level, attributed with
+    Meta's unified attribution setting for the exact period {{ date_start | default('') }} &mdash; {{ date_stop | default('') }}.
     Money figures are reported as delivered spend in {{ currency | default('EGP') }}. Results reflect each campaign's optimization goal
     (leads, messages, purchases, etc.). "Results" equals the account's primary optimization event; cost-per-result is derived from spend divided by results.
   </p>
@@ -505,6 +715,19 @@
       <tr><td>Budget, VAT, scope notes</td><td>Manual inputs (account manager)</td></tr>
     </tbody>
   </table>
+
+  <h3 class="block">Data Quality &amp; Verification</h3>
+  <p class="small">
+    All figures were pulled directly from the Meta Ads Insights API for the exact period
+    {{ date_start | default('') }} &mdash; {{ date_stop | default('') }} (inclusive). Reach and frequency are
+    deduplicated at account and platform level &mdash; they are never summed across campaigns. Spend, results,
+    impressions and clicks are additive and match the Meta Ads Manager totals for the same filters.
+  </p>
+  {% if data_quality %}
+  <ul class="small" style="padding-left:18px;">
+    {% for item in data_quality %}<li>{{ item }}</li>{% endfor %}
+  </ul>
+  {% endif %}
 
   <h3 class="block">Attribution Note</h3>
   <p class="small">

@@ -43,7 +43,7 @@ def render_pdf(cfg: AppConfig, client: Client, month: str, manual: ManualInputs,
         )
 
     html = template.render(**context)
-    out = OUTPUT_DIR / f"{client.id}_{month}.pdf"
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    out = OUTPUT_DIR / client.id / month / f"{client.id}_{month}.pdf"
+    out.parent.mkdir(parents=True, exist_ok=True)
     HTML(string=html, base_url=str(TEMPLATE_DIR)).write_pdf(out)
     return out

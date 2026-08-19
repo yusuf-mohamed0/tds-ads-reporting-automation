@@ -35,6 +35,8 @@ def _delta_pct(current: float, previous: float) -> float | None:
 
 
 def _fmt_money(value: float, currency: str) -> str:
+    if value and abs(value) < 1:
+        return f"{value:,.2f} {currency}"
     return f"{value:,.0f} {currency}"
 
 
@@ -48,6 +50,10 @@ def _campaign_metrics(c: CampaignRow) -> dict[str, Any]:
         "campaign_id": c.campaign_id,
         "objective": c.objective,
         "status": c.status,
+        "effective_status": c.effective_status,
+        "start_time": c.start_time,
+        "stop_time": c.stop_time,
+        "lifecycle": c.lifecycle if getattr(c, "lifecycle", None) else "",
         "spend": round(c.spend, 2),
         "results": c.results,
         "cpr": round(c.cost_per_result or _safe_div(c.spend, c.results), 2),
@@ -59,6 +65,40 @@ def _campaign_metrics(c: CampaignRow) -> dict[str, Any]:
         "reach": c.reach,
         "clicks": c.clicks,
     }
+
+
+def campaign_lifecycle(c: CampaignRow, month: str) -> str:
+    """Classify how a campaign relates to the reported month.
+
+    - 'new': started within the month
+    - 'ended': stopped within the month
+    - 'carried-over': started before the month and still running at month end
+      (an old campaign that keeps running — its results are included)
+    - 'active': ran during the month with no explicit start/stop dates
+    - 'inactive': no spend recorded for the month
+    """
+    if not c.spend and not c.impressions:
+        return "inactive"
+    y, m = (int(x) for x in month.split("-"))
+    month_start = date(y, m, 1)
+    month_end = date(y, m, calendar.monthrange(y, m)[1])
+    try:
+        start = date.fromisoformat((c.start_time or "")[:10])
+    except ValueError:
+        start = None
+    try:
+        stop = date.fromisoformat((c.stop_time or "")[:10])
+    except ValueError:
+        stop = None
+    if start is not None and month_start <= start <= month_end:
+        return "new"
+    if stop is not None and month_start <= stop <= month_end:
+        return "ended"
+    if start is not None and start < month_start:
+        if stop is None or stop > month_end:
+            return "carried-over"
+        return "active"
+    return "active"
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +127,45 @@ def generate_insights(
     frequency = float(totals.get("frequency", 0.0))
 
     campaigns = list(dataset.campaigns)
+    for c in campaigns:
+        c.lifecycle = campaign_lifecycle(c, dataset.month)
+
+    # ---- platform split (Facebook vs Instagram) ---------------------------
+    platform_rows: list[dict[str, Any]] = []
+    prev_platforms = (dataset.prev_month or {}).get("platforms") or {}
+    fb_map = {"facebook": "Facebook", "instagram": "Instagram", "messenger": "Messenger", "audience_network": "Audience Network"}
+    for platform_key, label in fb_map.items():
+        data = (dataset.platforms or {}).get(platform_key)
+        if not data:
+            continue
+        prev = prev_platforms.get(platform_key) or {}
+        row: dict[str, Any] = {
+            "platform": platform_key,
+            "label": label,
+            "spend": float(data.get("spend") or 0.0),
+            "spend_fmt": _fmt_money(float(data.get("spend") or 0.0), currency),
+            "results": int(data.get("results") or 0),
+            "results_fmt": _fmt_num(int(data.get("results") or 0)),
+            "impressions": int(data.get("impressions") or 0),
+            "reach": int(data.get("reach") or 0),
+            "clicks": int(data.get("clicks") or 0),
+            "ctr": float(data.get("ctr") or 0.0),
+            "cpc": float(data.get("cpc") or 0.0),
+            "cpm": float(data.get("cpm") or 0.0),
+            "cpr": float(data.get("cpr") or 0.0),
+            "frequency": float(data.get("frequency") or 0.0),
+            "share_pct": float(data.get("pct") or 0.0),
+            "mom_spend_pct": _delta_pct(float(data.get("spend") or 0.0), float(prev.get("spend") or 0.0)),
+            "mom_results_pct": _delta_pct(float(data.get("results") or 0.0), float(prev.get("results") or 0.0)),
+            "mom_cpr_pct": _delta_pct(float(data.get("cpr") or 0.0), float(prev.get("cpr") or 0.0)),
+            "mom_impressions_pct": _delta_pct(float(data.get("impressions") or 0.0), float(prev.get("impressions") or 0.0)),
+            "prev_spend": float(prev.get("spend") or 0.0),
+            "prev_results": int(prev.get("results") or 0),
+        }
+        platform_conv = (dataset.platform_conversions or {}).get(platform_key) or {}
+        row["conversions_total"] = int(platform_conv.get("total") or 0)
+        row["conversions"] = platform_conv.get("actions") or {}
+        platform_rows.append(row)
 
     # ---- budget / revenue -------------------------------------------------
     budget_amount = float(manual.budget.get("amount") or 0.0)
@@ -157,6 +236,8 @@ def generate_insights(
     # ---- MoM --------------------------------------------------------------
     prev_totals = (dataset.prev_month or {}).get("totals") or {}
     mom: dict[str, Any] = {}
+    prev_label = month_label((dataset.prev_month or {}).get("month") or "") if dataset.prev_month else ""
+    mom["prev_label"] = prev_label
     for key in ("spend", "results", "impressions", "reach", "ctr", "cpc", "cpm", "cpr"):
         cur = totals.get(key, 0.0)
         prev = prev_totals.get(key)
@@ -168,12 +249,57 @@ def generate_insights(
     prev_campaigns = {(pc.get("campaign_id") or ""): pc for pc in (dataset.prev_month or {}).get("campaigns") or []}
     mom["campaigns"] = {
         c.campaign_id: {
+            "name": c.campaign_name,
+            "lifecycle": c.lifecycle,
             "spend_prev": float(prev_campaigns.get(c.campaign_id, {}).get("spend") or 0.0),
             "spend_delta_pct": _delta_pct(c.spend, float(prev_campaigns.get(c.campaign_id, {}).get("spend") or 0.0)),
+            "results_prev": int(prev_campaigns.get(c.campaign_id, {}).get("results") or 0),
+            "results_delta_pct": _delta_pct(c.results, float(prev_campaigns.get(c.campaign_id, {}).get("results") or 0)),
+            "impressions_prev": int(prev_campaigns.get(c.campaign_id, {}).get("impressions") or 0),
+            "impressions_delta_pct": _delta_pct(c.impressions, float(prev_campaigns.get(c.campaign_id, {}).get("impressions") or 0)),
+            "cpr_prev": float(prev_campaigns.get(c.campaign_id, {}).get("cpr") or 0.0),
+            "cpr_delta_pct": _delta_pct(c.cost_per_result or _safe_div(c.spend, c.results), float(prev_campaigns.get(c.campaign_id, {}).get("cpr") or 0.0)),
+            "ctr_prev": float(prev_campaigns.get(c.campaign_id, {}).get("ctr") or 0.0),
+            "ctr_delta_pct": _delta_pct(c.ctr, float(prev_campaigns.get(c.campaign_id, {}).get("ctr") or 0.0)),
         }
         for c in campaigns
-        if c.campaign_id in prev_campaigns
     }
+
+    # Campaign continuity: old campaigns still running + new/stopped ones.
+    prev_ids = set(prev_campaigns)
+    cur_ids = {c.campaign_id for c in campaigns}
+    mom["new_campaigns"] = [
+        {"campaign_id": c.campaign_id, "name": c.campaign_name, "spend": c.spend, "results": c.results}
+        for c in campaigns if c.campaign_id not in prev_ids
+    ]
+    mom["stopped_campaigns"] = [
+        {
+            "campaign_id": pid,
+            "name": pc.get("campaign_name") or pid,
+            "spend": float(pc.get("spend") or 0.0),
+            "results": int(pc.get("results") or 0),
+        }
+        for pid, pc in prev_campaigns.items() if pid not in cur_ids
+    ]
+    mom["carried_over"] = [
+        {"campaign_id": c.campaign_id, "name": c.campaign_name, "spend": c.spend, "results": c.results}
+        for c in campaigns if c.lifecycle == "carried-over"
+    ]
+
+    # ---- data quality: results vs primary conversion action --------------
+    data_quality: list[str] = []
+    for c in campaigns:
+        if not c.results or c.spend <= 0:
+            continue
+        if c.objective and "lead" in c.objective.lower():
+            lead_actions = [at for at in ("onsite_conversion.lead", "lead", "leadgen_grouped") if at in dataset.conversions]
+            if lead_actions:
+                lead_count = sum(int(dataset.conversions[at].get("count") or 0) for at in lead_actions)
+                if lead_count and abs(lead_count - c.results) > max(1, c.results * 0.1):
+                    data_quality.append(
+                        f"'{c.campaign_name}': {c.results} results vs {lead_count} tracked lead actions "
+                        "(difference is normal with cross-device/conversion attribution)"
+                    )
 
     # ---- pacing -----------------------------------------------------------
     pacing = _build_pacing(dataset, manual, spend, budget_amount, budget_utilization, today)
@@ -209,6 +335,8 @@ def generate_insights(
         "recommendations": recommendations,
         "pacing": pacing,
         "mom": mom,
+        "platforms": platform_rows,
+        "data_quality": data_quality,
         "prev_month_label": month_label((dataset.prev_month or {}).get("month") or "") if dataset.prev_month else None,
     }
 
@@ -305,63 +433,90 @@ def _build_anomalies(
     out: list[str] = []
     spend = float(totals.get("spend", 0.0))
     impressions = int(totals.get("impressions", 0))
+    results = int(totals.get("results", 0))
     clicks = int(totals.get("clicks", 0))
 
-    # Publisher concentration
+# Platform efficiency: share of impressions vs share of results.
+    platforms = dataset.platforms or {}
+    platform_reported: set[str] = set()
+    if len(platforms) > 1:
+        for plat in platforms.values():
+            imp_share = _pct(float(plat.get("impressions") or 0), impressions)
+            plat_results = int(plat.get("results") or 0)
+            res_share = _pct(plat_results, results)
+            if imp_share >= 50 and res_share < 30 and results > 0:
+                out.append(
+                    f"{plat['platform'].capitalize()} delivered {imp_share:.0f}% of impressions but only "
+                    f"{_fmt_num(plat_results)} of {_fmt_num(results)} results ({res_share:.0f}%)"
+                )
+                platform_reported.add(plat["platform"].lower())
+                break
+
+    # Publisher concentration (impressions) — skip platforms already reported above
     for pub in dataset.publishers or []:
+        label = str(pub.get("label") or "").lower()
         share = _pct(float(pub.get("impressions") or 0), impressions)
-        if share >= 50:
-            out.append(f"{pub['label']} delivers {share:.0f}% of impressions")
+        if share >= 60 and label not in platform_reported:
+            out.append(f"{pub['label']} alone delivered {share:.0f}% of all impressions")
             break
 
     # Device concentration (clicks)
     for dev in dataset.devices or []:
         share = _pct(float(dev.get("clicks") or 0), clicks)
-        if share >= 70:
-            out.append(f"{dev['label']} drives {share:.0f}% of clicks")
+        if share >= 80:
+            out.append(f"{dev['label']} devices drove {share:.0f}% of clicks")
             break
 
-    # Campaign spend vs results imbalance
-    for c in campaigns:
-        spend_share = _pct(c.spend, spend)
-        results_share = _pct(c.results, int(totals.get("results", 0)))
-        if spend_share >= 35 and results_share <= 12:
-            out.append(f"{c.campaign_name} spent {spend_share:.0f}% of budget for {results_share:.0f}% of results")
+    # Campaign spend vs results imbalance (top offender only, specific)
+    offenders = sorted(
+        (c for c in campaigns if c.spend > 0),
+        key=lambda c: _pct(c.spend, spend) - _pct(c.results, results),
+        reverse=True,
+    )
+    if offenders:
+        worst = offenders[0]
+        spend_share = _pct(worst.spend, spend)
+        res_share = _pct(worst.results, results)
+        if spend_share >= 25 and res_share < 15 and results > 0:
+            out.append(
+                f"'{worst.campaign_name}' consumed {spend_share:.0f}% of the budget for only {res_share:.0f}% of results"
+            )
 
     # MoM spend swing
     spend_mom = mom.get("spend", {}).get("delta_pct")
     if spend_mom is not None and abs(spend_mom) > 30:
         direction = "up" if spend_mom > 0 else "down"
-        out.append(f"Spend moved {direction} {abs(spend_mom):.0f}% vs the previous month")
+        out.append(f"Ad spend moved {direction} {abs(spend_mom):.0f}% versus {mom.get('prev_label', 'the previous month')}")
 
-    # High frequency
-    for c in campaigns:
-        if c.frequency and c.frequency > 4.0:
-            out.append(f"{c.campaign_name} ran at frequency {c.frequency:.1f} (above 4.0)")
+    # Zero-result spenders: only the top 2 by spend, specific
+    zero_spenders = sorted((c for c in campaigns if c.results == 0 and c.spend > 0), key=lambda c: c.spend, reverse=True)
+    for c in zero_spenders[:2]:
+        out.append(f"'{c.campaign_name}' spent {_fmt_money(c.spend, currency)} and produced no results")
 
-    # Zero-results spend
-    for c in campaigns:
-        if c.results == 0 and c.spend > 0:
-            out.append(f"{c.campaign_name} spent {_fmt_money(c.spend, currency)} with no results")
+    # Frequency flag: only the worst offender
+    high_freq = [c for c in campaigns if c.frequency and c.frequency > 4.0]
+    if high_freq:
+        worst_freq = max(high_freq, key=lambda c: c.frequency)
+        out.append(f"'{worst_freq.campaign_name}' reached a frequency of {worst_freq.frequency:.1f} (recommended ceiling 4.0)")
 
-    # Budget over/under
+    # Budget pacing
     if budget_amount and budget_utilization > 100:
-        out.append(f"Spend exceeded the monthly budget by {budget_utilization - 100:.0f}%")
+        out.append(f"Spend exceeded the monthly budget by {budget_utilization - 100:.0f}% ({_fmt_money(spend, currency)} vs {_fmt_money(budget_amount, currency)})")
     elif budget_amount and budget_utilization < 10:
-        out.append(f"Only {budget_utilization:.0f}% of the monthly budget was used")
+        out.append(f"Only {budget_utilization:.0f}% of the monthly budget was used ({_fmt_money(spend, currency)} of {_fmt_money(budget_amount, currency)})")
 
     # Hour concentration
     peak_hour = max((dataset.hour_pacing or {}).items(), key=lambda kv: kv[1].get("pct", 0), default=None)
-    if peak_hour and peak_hour[1].get("pct", 0) >= 15:
-        out.append(f"Spend concentrates at hour {peak_hour[0]} ({peak_hour[1]['pct']:.0f}% of spend)")
+    if peak_hour and peak_hour[1].get("pct", 0) >= 20:
+        out.append(f"Spend peaks at {peak_hour[0]}:00 ({peak_hour[1]['pct']:.0f}% of daily spend)")
 
     # Country concentration
     if dataset.countries:
         top = dataset.countries[0]
-        if top.get("pct", 0) >= 50:
-            out.append(f"{top['label']} accounts for {top['pct']:.0f}% of spend")
+        if top.get("pct", 0) >= 60:
+            out.append(f"{top['label']} accounts for {top['pct']:.0f}% of total spend")
 
-    return out
+    return out[:8]
 
 
 # ---------------------------------------------------------------------------
