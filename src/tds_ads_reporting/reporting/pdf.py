@@ -16,32 +16,33 @@ TEMPLATE_DIR = ROOT / "templates"
 OUTPUT_DIR = ROOT / "reports"
 
 
-def _period(month: str) -> tuple[str, str]:
+def period(month: str) -> tuple[str, str]:
     y, m = (int(x) for x in month.split("-"))
     return f"{y}-{m:02d}-01", f"{y}-{m:02d}-{calendar.monthrange(y, m)[1]}"
 
 
-def _month_label(month: str) -> str:
+def month_label(month: str) -> str:
     y, m = (int(x) for x in month.split("-"))
     return f"{calendar.month_name[m]} {y}"
 
 
-def render_pdf(cfg: AppConfig, client: Client, month: str, manual: ManualInputs, data) -> Path:
-    date_start, date_stop = _period(month)
+def render_pdf(cfg: AppConfig, client: Client, month: str, manual: ManualInputs, data, context: dict | None = None) -> Path:
+    date_start, date_stop = period(month)
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR), autoescape=select_autoescape(["html"]))
     template = env.get_template("report.html.j2")
 
-    ctx = build_context(
-        client=client,
-        month=month,
-        manual=manual,
-        data=data,
-        month_label=_month_label(month),
-        date_start=date_start,
-        date_stop=date_stop,
-    )
+    if context is None:
+        context = build_context(
+            client=client,
+            month=month,
+            manual=manual,
+            data=data,
+            month_label=month_label(month),
+            date_start=date_start,
+            date_stop=date_stop,
+        )
 
-    html = template.render(**ctx)
+    html = template.render(**context)
     out = OUTPUT_DIR / f"{client.id}_{month}.pdf"
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     HTML(string=html, base_url=str(TEMPLATE_DIR)).write_pdf(out)

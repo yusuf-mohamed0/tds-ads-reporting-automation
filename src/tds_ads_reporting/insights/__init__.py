@@ -1,0 +1,1 @@
+"""Deterministic insights engine (no LLM) for the monthly media-buying report."""

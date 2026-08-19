@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Monthly reporting job: generate + email reports for all active clients,
-# for the given month. Defaults to the current month.
+# for the given month. Defaults to the previous calendar month.
 #
 # Usage:
 #   ./scripts/run-monthly.sh [YYYY-MM] [--email]
 #
 # Examples:
 #   ./scripts/run-monthly.sh 2026-03 --email
-#   ./scripts/run-monthly.sh            # current month, no email
+#   ./scripts/run-monthly.sh            # previous calendar month, no email
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MONTH="${1:-$(date +%Y-%m)}"
+MONTH="${1:-$(date -d "$(date +%Y-%m-01) -1 day" +%Y-%m)}"
 EMAIL_FLAG=""
 if [[ "${2:-}" == "--email" ]]; then
   EMAIL_FLAG="--email"

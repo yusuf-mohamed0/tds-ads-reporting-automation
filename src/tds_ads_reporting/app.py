@@ -6,12 +6,13 @@ sys.path.insert(0, os.path.dirname(__file__))
 import click
 
 from tds_ads_reporting.config import load_config
-from tds_ads_reporting.mailer.sender import send_report
+from tds_ads_reporting.mailer.sender import send_combined_report, send_report
 from tds_ads_reporting.manual_inputs.loader import load_manual_inputs
 from tds_ads_reporting.meta.credentials import init_credentials
 from tds_ads_reporting.observability.logging import setup_logging
-from tds_ads_reporting.reporting.assembler import fetch_all
-from tds_ads_reporting.reporting.pdf import render_pdf
+from tds_ads_reporting.reporting.assembler import build_context, fetch_all
+from tds_ads_reporting.reporting.combined import render_combined_pdf
+from tds_ads_reporting.reporting.pdf import month_label, period, render_pdf
 from tds_ads_reporting.storage.cache import SummaryCache
 
 
@@ -72,11 +73,13 @@ def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, no_cache: boo
 @click.option("--email", is_flag=True)
 @click.option("--no-cache", is_flag=True, help="Bypass the SQLite summary cache")
 def run_all(month: str, email: bool, no_cache: bool) -> None:
-    """Generate reports for all active clients."""
+    """Generate reports for all active clients, plus one combined portfolio report."""
     setup_logging()
     cfg = load_config()
     cache = None if no_cache else SummaryCache()
     creds = init_credentials()
+    date_start, date_stop = period(month)
+    clients_data = []
     for client in cfg.active_clients():
         try:
             manual = load_manual_inputs(client.id, month)
@@ -88,12 +91,31 @@ def run_all(month: str, email: bool, no_cache: bool) -> None:
                 meta_page_token=creds.meta_page_access_token,
                 cache=cache,
             )
-            pdf = render_pdf(cfg, client, month, manual, data)
+            context = build_context(
+                client=client,
+                month=month,
+                manual=manual,
+                data=data,
+                month_label=month_label(month),
+                date_start=date_start,
+                date_stop=date_stop,
+            )
+            pdf = render_pdf(cfg, client, month, manual, data, context=context)
             click.echo(f"ok {client.id} -> {pdf}")
+            clients_data.append((client, context))
             if email:
                 send_report(client=client, pdf_path=pdf, month=month)
         except Exception as exc:  # noqa: BLE001
             click.echo(f"fail {client.id}: {exc}")
+
+    total = len(cfg.active_clients())
+    if clients_data:
+        combined_pdf = render_combined_pdf(clients_data, month=month)
+        click.echo(f"ok combined ({len(clients_data)}/{total} clients) -> {combined_pdf}")
+        if email:
+            send_combined_report(pdf_path=combined_pdf, month=month)
+    else:
+        click.echo(f"combined skipped: no clients succeeded ({total} attempted)")
 
 
 @cli.command()

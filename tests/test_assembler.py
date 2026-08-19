@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from tds_ads_reporting.config import Client, MetaConfig
 from tds_ads_reporting.manual_inputs.loader import ManualInputs
-from tds_ads_reporting.meta.ads import AdsSummary, CampaignRow
+from tds_ads_reporting.meta.ads import AdsSummary, CampaignRow, MetaAdsDataset
 from tds_ads_reporting.meta.page import InstagramMetrics, PageMetrics, PostRow
 from tds_ads_reporting.reporting.assembler import FetchedData, build_context
 from tds_ads_reporting.reporting.pdf import render_pdf
@@ -82,6 +82,96 @@ def _data() -> FetchedData:
     )
 
 
+def _rich_data() -> FetchedData:
+    return FetchedData(
+        meta_ads=MetaAdsDataset(
+            account_id="act_123",
+            month="2026-03",
+            currency="EGP",
+            campaigns=[
+                CampaignRow(
+                    campaign_id="1",
+                    campaign_name="Leads Campaign",
+                    objective="LEAD_GENERATION",
+                    status="ACTIVE",
+                    results=120,
+                    cost_per_result=150.5,
+                    spend=18060.0,
+                    impressions=500000,
+                    reach=400000,
+                    frequency=1.25,
+                    ctr=1.5,
+                    cpc=3.0,
+                    cpm=36.12,
+                    inline_link_clicks=7500,
+                ),
+                CampaignRow(
+                    campaign_id="2",
+                    campaign_name="Dead Spend",
+                    objective="TRAFFIC",
+                    status="PAUSED",
+                    results=0,
+                    cost_per_result=0.0,
+                    spend=5000.0,
+                    impressions=100000,
+                    reach=90000,
+                    frequency=1.11,
+                    ctr=0.5,
+                    cpc=4.0,
+                    cpm=50.0,
+                    inline_link_clicks=1250,
+                ),
+            ],
+            adsets=[
+                {
+                    "adset_id": "a1",
+                    "adset_name": "LAL 1%",
+                    "campaign_id": "1",
+                    "campaign_name": "Leads Campaign",
+                    "spend": 12000.0,
+                    "results": 80,
+                    "cost_per_result": 150.0,
+                    "impressions": 300000,
+                    "reach": 240000,
+                    "frequency": 1.25,
+                    "ctr": 1.6,
+                    "cpc": 3.0,
+                    "cpm": 40.0,
+                    "inline_link_clicks": 4000,
+                }
+            ],
+            conversions={"lead": {"count": 120, "cost": 18060.0, "cpa": 150.5}},
+            devices=[{"label": "mobile", "spend": 20000.0, "impressions": 600000, "clicks": 9000, "results": 150, "ctr": 1.5, "pct": 75.0}],
+            publishers=[
+                {"label": "instagram", "spend": 18000.0, "impressions": 500000, "clicks": 8000, "results": 130, "ctr": 1.6, "pct": 67.5},
+                {"label": "facebook", "spend": 8660.0, "impressions": 300000, "clicks": 2550, "results": 30, "ctr": 0.85, "pct": 32.5},
+            ],
+            countries=[{"label": "Egypt", "spend": 20000.0, "impressions": 600000, "clicks": 9000, "results": 150, "ctr": 1.5, "pct": 75.0}],
+            demographics=[{"age": "18-24", "gender": "F", "spend": 12000.0, "impressions": 300000, "results": 80, "pct": 45.0}],
+            dow_pacing={"Sunday": {"spend": 0.0, "pct": 0.0}, "Monday": {"spend": 5000.0, "pct": 18.7}},
+            hour_pacing={"14": {"spend": 500.0, "pct": 1.9}},
+            daily_spend=[{"date": "2026-03-01", "spend": 1000.0}],
+            totals={
+                "spend": 23060.0,
+                "impressions": 600000,
+                "reach": 490000,
+                "results": 120,
+                "clicks": 8750,
+                "ctr": 1.46,
+                "cpc": 2.64,
+                "cpm": 38.43,
+                "cpr": 192.17,
+                "frequency": 1.22,
+            },
+            prev_month={
+                "month": "2026-02",
+                "totals": {"spend": 20000.0, "impressions": 600000, "reach": 500000, "results": 100, "clicks": 8000, "ctr": 1.33, "cpc": 2.5, "cpm": 33.33, "cpr": 200.0, "frequency": 1.2},
+                "campaigns": [{"campaign_id": "1", "campaign_name": "Leads Campaign", "spend": 15000.0, "results": 90, "impressions": 400000, "reach": 320000, "ctr": 1.4, "cpr": 166.67}],
+            },
+        ),
+    )
+
+
 class TestBuildContext(unittest.TestCase):
     def test_context(self):
         manual = ManualInputs(
@@ -102,6 +192,64 @@ class TestBuildContext(unittest.TestCase):
         self.assertEqual(ctx["budget"]["amount"], "63,600 EGP")
         self.assertEqual(ctx["ads"][0]["campaigns"][0]["name"], "Leads Campaign")
         self.assertEqual(ctx["audience"][1]["demographics"][0]["female"], "10")
+
+    def test_rich_context(self):
+        manual = ManualInputs(
+            client_id="lodge",
+            month="2026-03",
+            budget={"amount": 63600, "spent": 42834, "vat": 48830, "remaining": 14770, "revenue": 90000},
+            scope_prose="Scope prose.",
+            insights=["Good month"],
+        )
+        ctx = build_context(_client(), "2026-03", manual, _rich_data(), "March 2026", "2026-03-01", "2026-03-31")
+
+        self.assertTrue(ctx["has_meta"])
+        self.assertEqual(ctx["currency"], "EGP")
+        self.assertEqual(ctx["prev_month_label"], "February 2026")
+        self.assertIn("executive_summary", ctx)
+        self.assertEqual(ctx["kpis"]["spend"], 23060.0)
+        self.assertEqual(ctx["kpis"]["roas"], 3.9)
+        self.assertEqual(ctx["revenue"], 90000.0)
+        self.assertEqual(ctx["revenue_fmt"], "90,000 EGP")
+
+        # campaign table rows: sorted by spend desc, flagged, MoM computed
+        rows = ctx["campaigns"]
+        self.assertEqual([r["name"] for r in rows], ["Leads Campaign", "Dead Spend"])
+        self.assertTrue(rows[0]["is_top"])
+        self.assertFalse(rows[0]["is_bottom"])
+        self.assertTrue(rows[1]["is_bottom"])
+        self.assertFalse(rows[1]["is_top"])
+        self.assertEqual(rows[0]["mom_spend_delta_pct"], 20.4)
+        self.assertIsNone(rows[1]["mom_spend_delta_pct"])
+        self.assertEqual(rows[0]["spend_fmt"], "18,060")
+        self.assertEqual(rows[0]["cpr_fmt"], "150")
+
+        # breakdown rows
+        self.assertEqual(ctx["conversions"][0]["action_type"], "lead")
+        self.assertEqual(ctx["devices"][0]["label"], "mobile")
+        self.assertEqual(ctx["publishers"][0]["label"], "instagram")
+        self.assertEqual(ctx["countries"][0]["label"], "Egypt")
+        self.assertEqual(ctx["demographics"][0]["age"], "18-24")
+        self.assertEqual(ctx["age_gender"]["18-24"]["F"], "12,000")
+        self.assertEqual(ctx["dow_pacing"][0]["label"], "Sunday")
+        self.assertEqual(ctx["hour_pacing"][0]["label"], "14")
+        self.assertEqual(ctx["top_adsets"][0]["adset_name"], "LAL 1%")
+        self.assertEqual(ctx["top_adsets"][0]["spend_fmt"], "12,000")
+
+        # insights payload keys
+        self.assertTrue(ctx["top_campaigns"])
+        self.assertTrue(ctx["bottom_campaigns"])
+        self.assertTrue(ctx["anomalies"])
+        self.assertTrue(ctx["recommendations"])
+        self.assertIn("pacing", ctx)
+        self.assertIn("mom", ctx)
+
+    def test_legacy_ads_summary_promoted(self):
+        manual = ManualInputs("lodge", "2026-03")
+        ctx = build_context(_client(), "2026-03", manual, _data(), "March 2026", "2026-03-01", "2026-03-31")
+        self.assertTrue(ctx["has_meta"])
+        self.assertEqual(ctx["campaigns"][0]["name"], "Leads Campaign")
+        self.assertEqual(ctx["kpis"]["spend"], 1806.0)
 
 
 class TestRenderPdf(unittest.TestCase):
@@ -127,6 +275,22 @@ class TestRenderPdf(unittest.TestCase):
             "ads": [],
         }
         out = render_pdf(cfg, _client(), "2026-03", ManualInputs("lodge", "2026-03"), None)
+        self.assertTrue(out.exists())
+        self.assertGreater(out.stat().st_size, 1000)
+
+    def test_render_rich_context(self):
+        """Render the full rich context (MetaAdsDataset + insights) end-to-end."""
+        cfg = type("Cfg", (), {"client": lambda self, i: _client()})()
+        manual = ManualInputs(
+            client_id="lodge",
+            month="2026-03",
+            budget={"amount": 63600, "spent": 42834, "vat": 48830, "remaining": 14770, "revenue": 90000},
+            scope_prose="Scope prose.",
+            insights=["Good month"],
+            recommendations=["Keep going"],
+        )
+        ctx = build_context(_client(), "2026-03", manual, _rich_data(), "March 2026", "2026-03-01", "2026-03-31")
+        out = render_pdf(cfg, _client(), "2026-03", manual, None, context=ctx)
         self.assertTrue(out.exists())
         self.assertGreater(out.stat().st_size, 1000)
 
