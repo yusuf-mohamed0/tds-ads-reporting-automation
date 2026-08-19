@@ -20,12 +20,6 @@ class MetaConfig:
 
 
 @dataclass
-class GoogleAdsConfig:
-    customer_ids: list[str] = field(default_factory=list)
-    conversion_actions: dict[str, list[str]] = field(default_factory=dict)
-
-
-@dataclass
 class Client:
     id: str
     name: str
@@ -36,15 +30,12 @@ class Client:
     monthly_budget: float | None = None
     goals: dict[str, Any] = field(default_factory=dict)
     meta: MetaConfig = field(default_factory=MetaConfig)
-    google_ads: GoogleAdsConfig = field(default_factory=GoogleAdsConfig)
     report: dict[str, Any] = field(default_factory=dict)
 
     def platforms(self) -> list[str]:
         out = []
         if self.meta.ad_accounts:
             out.append("meta")
-        if self.google_ads.customer_ids:
-            out.append("google")
         return out
 
 
@@ -74,15 +65,6 @@ def _parse_meta(entry: dict[str, Any]) -> MetaConfig:
     )
 
 
-def _parse_google(entry: dict[str, Any]) -> GoogleAdsConfig:
-    ga = entry.get("google_ads") or {}
-    customer_ids = [c["id"] for c in ga.get("customer_ids", [])]
-    return GoogleAdsConfig(
-        customer_ids=customer_ids,
-        conversion_actions=ga.get("conversion_actions") or {},
-    )
-
-
 def load_config(path: Path = DEFAULT_CONFIG) -> AppConfig:
     if not path.exists():
         path = CONFIG_DIR / "clients.example.yaml"
@@ -91,6 +73,5 @@ def load_config(path: Path = DEFAULT_CONFIG) -> AppConfig:
     for entry in raw.get("clients", []):
         data = dict(entry)
         data["meta"] = _parse_meta(entry)
-        data["google_ads"] = _parse_google(entry)
         cfg.clients.append(Client(**data))
     return cfg

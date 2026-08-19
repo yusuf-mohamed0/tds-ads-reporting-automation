@@ -7,7 +7,6 @@ Linux Scheduler
   -> Reporting Runner
      -> Client Config Loader
      -> Meta Ads Extractor
-     -> Google Ads Extractor
      -> Normalization Layer
      -> SQLite Storage
      -> KPI Calculator
@@ -25,7 +24,6 @@ Linux Scheduler
 3. Client config is loaded and validated.
 4. For each client:
    - Pull Meta data if Meta is enabled.
-   - Pull Google Ads data if Google Ads is enabled.
    - Normalize metrics into common schema.
    - Store raw and normalized data locally.
    - Calculate KPIs and comparisons.
@@ -50,10 +48,6 @@ Linux Scheduler
       page.py                 # Page/Instagram insights (reach, content, audience)
       messaging.py            # Messaging/conversations insights
       permissions.py          # scope checks
-    google_ads/
-      client.py               # Google Ads API client
-      queries.py              # GAQL query builders
-      metrics.py              # Google metric normalization
     storage/
       db.py                   # SQLite connection and migrations
       repositories.py         # save/load reports and metrics
@@ -147,33 +141,6 @@ These require `pages_read_engagement`, `pages_read_user_content`, `read_insights
 #### Manual Narrative And Budget
 
 Budget, VAT, remaining, Report Scope prose, and Insights commentary are not in any API. Provide them through a per-client per-month manual-input file that is merged into the renderer.
-
-### Google Ads
-
-Use Google Ads API GAQL queries through `GoogleAdsService.SearchStream`.
-
-Common resources:
-
-- `customer`
-- `campaign`
-- `ad_group`
-- `ad_group_ad`
-- `search_term_view`
-
-Use fields such as:
-
-- `campaign.id`
-- `campaign.name`
-- `campaign.status`
-- `metrics.cost_micros`
-- `metrics.impressions`
-- `metrics.clicks`
-- `metrics.ctr`
-- `metrics.average_cpc`
-- `metrics.conversions`
-- `metrics.cost_per_conversion`
-- `metrics.conversions_value`
-- `segments.date`
 
 ## Report Rendering Strategy
 

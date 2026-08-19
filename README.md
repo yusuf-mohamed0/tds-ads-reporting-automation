@@ -1,6 +1,6 @@
 # TDS Ads Reporting Automation
 
-Local Linux automation plan for monthly Meta Ads and Google Ads client PDF reporting.
+Local Linux automation plan for monthly Meta Ads client PDF reporting.
 
 ## Purpose
 
@@ -8,7 +8,6 @@ This project defines the requirements, architecture, setup process, and implemen
 
 - Pulls Meta Ads performance through the official Meta Marketing API.
 - Pulls Facebook/Instagram Page, content, messaging, and audience insights for Business Suite reports.
-- Pulls Google Ads performance through the official Google Ads API.
 - Supports around 30 clients with mixed goals.
 - Generates English monthly PDF reports matching the agency's "Lodge - March 2026" reference format.
 - Emails reports automatically to `reports@trafficdigitalsolutions.com`.
@@ -18,14 +17,13 @@ This project defines the requirements, architecture, setup process, and implemen
 
 Build a local Python app that uses official APIs and generates PDFs directly.
 
-Do not automate Meta Business Suite or Google Ads UI screenshots. API-based reporting is more stable, safer, easier to audit, and scalable for 30 clients.
+Do not automate Meta Business Suite UI screenshots. API-based reporting is more stable, safer, easier to audit, and scalable for 30 clients.
 
 ## Repository Contents
 
 - `docs/01-requirements.md` - full business, technical, access, data, security, and operational requirements.
 - `docs/02-architecture.md` - complete architecture, data flow, modules, database, scheduler, and failure handling.
 - `docs/03-meta-api-setup.md` - Meta Business/Developer setup checklist.
-- `docs/04-google-ads-api-setup.md` - Google Ads API setup checklist.
 - `docs/05-client-config-and-data-model.md` - client mapping, goal mapping, and local database schema.
 - `docs/06-report-template-spec.md` - PDF sections, metrics, charts, and narrative structure.
 - `docs/06-report-template-spec-lodge.md` - exact page-by-page analysis of the "Lodge - March 2026" reference report and API mapping.
@@ -40,7 +38,6 @@ Do not automate Meta Business Suite or Google Ads UI screenshots. API-based repo
 
 - Sample report PDF/screenshots from the current manual process.
 - Meta ad account IDs for every client.
-- Google Ads customer IDs for every client.
 - Client goal definitions and conversion event/action names.
 - Sender email method for `reports@trafficdigitalsolutions.com`.
 - Brand styling: logo, colors, fonts, footer/contact details.
@@ -49,7 +46,7 @@ Do not automate Meta Business Suite or Google Ads UI screenshots. API-based repo
 
 1. Linux scheduler runs the app on the first day of each month.
 2. App calculates previous month date range.
-3. App pulls each client's Meta and Google Ads data.
+3. App pulls each client's Meta data.
 4. App normalizes metrics into one local SQLite database.
 5. App generates one PDF report per client.
 6. App emails PDFs to `reports@trafficdigitalsolutions.com`.

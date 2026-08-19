@@ -6,14 +6,14 @@
 - Run locally on a Linux device controlled by Traffic Digital Solutions.
 - Produce English PDF reports only.
 - Email generated reports automatically to `reports@trafficdigitalsolutions.com`.
-- Support clients with Meta Ads only, Google Ads only, or both.
+- Support clients with Meta Ads (Facebook & Instagram).
 - Support mixed goals: leads, messages, purchases, calls, traffic, awareness, and custom conversions.
 - Preserve a consistent agency-branded report structure.
 - Reduce monthly manual screenshot/reporting work as close to zero as practical.
 
 ## Non-Goals
 
-- Do not automate browser login to Meta Business Suite or Google Ads.
+- Do not automate browser login to Meta Business Suite.
 - Do not automate Gmail verification codes, 2FA prompts, captchas, or device checks.
 - Do not scrape screenshots as the primary reporting method.
 - Do not store client passwords.
@@ -34,7 +34,6 @@
 
 Recommended implementation packages:
 
-- `google-ads` for Google Ads API.
 - `requests` or Meta Business SDK for Meta API.
 - `pandas` for data normalization.
 - `pydantic` for config validation.
@@ -67,17 +66,6 @@ The reference report ("Lodge - March 2026") is a full **Meta Business Suite** re
 - Access token covering all pages/IG accounts, stored securely.
 - Ad account IDs in `act_<ID>` format, plus Page IDs and Instagram IDs (or handles) for content/audience/messaging metrics.
 
-## Google Ads Access Requirements
-
-- Google Ads Manager Account / MCC with access to all client accounts.
-- Google Cloud project.
-- Google Ads API enabled.
-- OAuth Client ID and Client Secret.
-- Google Ads Developer Token from API Center.
-- OAuth refresh token for the MCC/admin account.
-- MCC customer ID used as `login-customer-id`.
-- Client Google Ads customer IDs.
-
 ## Email Requirements
 
 Preferred email method:
@@ -107,11 +95,9 @@ Each client needs:
 - Monthly budget if available.
 - Enabled platforms.
 - Meta ad account IDs.
-- Google Ads customer IDs.
 - Primary goal.
 - Secondary goals.
 - Meta conversion action mapping.
-- Google Ads conversion action mapping.
 - Optional campaign naming rules.
 - Optional manual notes/recommendation overrides.
 
@@ -124,13 +110,11 @@ Required sections:
 - Cover page.
 - Executive summary.
 - Overall monthly KPI cards.
-- Platform split: Meta vs Google Ads when both exist.
 - Reach (FB + IG, organic vs paid breakdown).
 - Messaging / conversations (FB + IG, organic vs paid).
 - Content performance (top posts/media).
 - Audience demographics + followers.
 - Meta Ads section when enabled (campaign tables).
-- Google Ads section when enabled.
 - Campaign performance table.
 - Best performers.
 - Weak performers.

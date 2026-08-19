@@ -39,7 +39,6 @@ def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, no_cache: boo
         click.echo(f"  platforms: {', '.join(client.platforms()) or 'none'}")
         click.echo(f"  meta accounts: {client.meta.ad_accounts or []}")
         click.echo(f"  page: {client.meta.page_id}  ig: {client.meta.instagram_id}")
-        click.echo(f"  google customers: {client.google_ads.customer_ids or []}")
         return
 
     cache = None if no_cache else SummaryCache()
@@ -56,9 +55,9 @@ def run(client_id: str, month: str, dry_run: bool, no_fetch: bool, no_cache: boo
     data = fetch_all(
         meta_token=creds.meta_access_token,
         meta_version=creds.meta_api_version,
-        google_yaml=creds.google_ads_yaml,
         client=client,
         month=month,
+        meta_page_token=creds.meta_page_access_token,
         cache=cache,
     )
     pdf = render_pdf(cfg, client, month, manual, data)
@@ -84,9 +83,9 @@ def run_all(month: str, email: bool, no_cache: bool) -> None:
             data = fetch_all(
                 meta_token=creds.meta_access_token,
                 meta_version=creds.meta_api_version,
-                google_yaml=creds.google_ads_yaml,
                 client=client,
                 month=month,
+                meta_page_token=creds.meta_page_access_token,
                 cache=cache,
             )
             pdf = render_pdf(cfg, client, month, manual, data)

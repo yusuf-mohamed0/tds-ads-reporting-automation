@@ -17,13 +17,23 @@ def month_label(month: str) -> str:
     return f"{calendar.month_name[mon]} {year}"
 
 
+def _first_scalar(value: object) -> object:
+    if isinstance(value, list):
+        return _first_scalar(value[0]) if value else None
+    if isinstance(value, dict):
+        return _first_scalar(value.get("value") or value.get("values") or value.get("result"))
+    return value
+
+
 def parse_float(value: object, default: float = 0.0) -> float:
+    value = _first_scalar(value)
     if value in (None, "", "None"):
         return default
     return float(value)
 
 
 def parse_int(value: object, default: int = 0) -> int:
+    value = _first_scalar(value)
     if value in (None, "", "None"):
         return default
     return int(float(value))

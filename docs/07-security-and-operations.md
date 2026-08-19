@@ -24,7 +24,6 @@ Never commit:
 - Meta app secret.
 - Google refresh token.
 - Google client secret.
-- Google Ads developer token.
 - Gmail app password or Gmail refresh token.
 
 ## Local File Permissions
@@ -61,11 +60,10 @@ Logs should not include:
 Before first monthly production run:
 
 - Confirm Meta token works.
-- Confirm Google Ads refresh token works.
 - Confirm email sender works.
 - Confirm all client account IDs are mapped.
 - Run one test client.
-- Compare output numbers with Meta/Google UI.
+- Compare output numbers with Meta UI.
 - Run all clients in dry-run mode.
 - Approve template.
 
@@ -109,14 +107,6 @@ Meta:
 - System User lost account access.
 - Action type changed or no longer appears.
 - API rate limit.
-
-Google Ads:
-
-- Refresh token revoked.
-- Developer token issue.
-- MCC access removed.
-- Invalid customer ID.
-- GAQL query incompatible with selected fields.
 
 Email:
 

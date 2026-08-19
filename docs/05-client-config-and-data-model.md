@@ -14,12 +14,10 @@ Required fields:
 - `timezone`
 - `goals.primary`
 - `meta.enabled`
-- `google_ads.enabled`
 
 Conditional fields:
 
 - `meta.ad_accounts` when Meta is enabled.
-- `google_ads.customer_ids` when Google Ads is enabled.
 - `conversion_actions` for each platform and goal.
 
 ## Goal Types

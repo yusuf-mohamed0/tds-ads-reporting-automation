@@ -95,8 +95,8 @@ import sys; sys.path.insert(0,'src')
 from tds_ads_reporting.meta.credentials import init_credentials
 c=init_credentials()
 print('META_SYSTEM_USER_TOKEN set:', bool(c.meta_access_token))
+print('META_PAGE_ACCESS_TOKEN set:', bool(c.meta_page_access_token))
 print('API version:', c.meta_api_version)
-print('GOOGLE_ADS_YAML:', c.google_ads_yaml)
 "
 ```
 

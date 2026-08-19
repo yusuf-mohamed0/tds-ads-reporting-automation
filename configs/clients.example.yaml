@@ -23,21 +23,11 @@ clients:
           - "onsite_conversion.lead_grouped"
         messages:
           - "onsite_conversion.messaging_conversation_started_7d"
-    google_ads:
-      enabled: true
-      customer_ids:
-        - id: "1234567890"
-          label: "Main Google Ads Account"
-      conversion_actions:
-        leads:
-          - "Lead form submit"
-          - "Phone call lead"
     report:
       include_sections:
         - "executive_summary"
         - "overall_performance"
         - "meta_ads"
-        - "google_ads"
         - "campaign_breakdown"
         - "recommendations"
       notes:
@@ -59,6 +49,3 @@ clients:
       conversion_actions:
         messages:
           - "onsite_conversion.messaging_conversation_started_7d"
-    google_ads:
-      enabled: false
-      customer_ids: []

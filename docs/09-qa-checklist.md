@@ -18,9 +18,6 @@ For each test client:
 - Meta impressions match Ads Manager.
 - Meta results match selected action mapping.
 - Meta CPA matches spend / mapped results.
-- Google cost matches Google Ads UI after micros conversion.
-- Google conversions match selected conversion action settings.
-- Google CPA matches cost / conversions.
 - Date range is previous calendar month.
 - Currency is correct.
 
@@ -48,7 +45,6 @@ For each test client:
 ## Failure Testing
 
 - Invalid Meta account does not stop other clients.
-- Invalid Google customer ID does not stop other clients.
 - Email failure leaves PDF saved locally.
 - Rerun does not duplicate rows.
 - Logs contain enough information to fix issue.
@@ -57,7 +53,5 @@ For each test client:
 
 - At least 3 clients verified against manual reports.
 - One Meta-only client verified.
-- One Google-only client verified if applicable.
-- One Meta+Google client verified.
 - Agency approves final PDF design.
 - First production run reviewed manually before trusting automation.

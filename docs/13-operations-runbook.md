@@ -25,7 +25,7 @@ How to run the monthly reporting cycle, refresh tokens, and handle failures.
 2. **Dry-run one client** to verify config:
    ```bash
    cd /root/tds-ads-reporting-automation
-   export GH_TOKEN="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"   # only for git push
+   export GH_TOKEN="<REDACTED_GITHUB_TOKEN>"   # only for git push
    PYTHONPATH=src .venv/bin/python -m tds_ads_reporting.app run \
      --client lodge --month 2026-03 --dry-run
    ```
@@ -70,7 +70,6 @@ Renders with manual inputs only; API sections stay empty.
   ```
 - Update `META_SYSTEM_USER_TOKEN` in `.env`.
 - Page tokens: regenerate from Graph API Explorer if they stop working.
-- Google refresh tokens do not expire (unless revoked); rotate `google-ads.yaml` only if revoked.
 
 ## Error handling
 
@@ -81,7 +80,6 @@ Renders with manual inputs only; API sections stay empty.
 | Meta `4` / `17` | app/user limit | Spread queries over the day |
 | Meta `#100 invalid metric` | metric name changed/retired | Check `docs/11-api-knowledge.md` metric table |
 | Meta `#190` | token expired | Refresh token (above) |
-| Google `RESOURCE_EXHAUSTED` | quota | Module retries 4× with backoff; run later |
 | `TemplateNotFound` | wrong CWD | Always run from project root |
 | PDF blank sections | no data for that platform | Expected when client doesn't use that platform |
 
@@ -94,7 +92,7 @@ PYTHONPATH=src .venv/bin/python -m unittest discover tests
 ## Git / GitHub
 
 ```bash
-export GH_TOKEN="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"
+export GH_TOKEN="<REDACTED_GITHUB_TOKEN>"
 git add -A
 git -c user.name="Traffic Digital Solutions" -c user.email="reports@trafficdigitalsolutions.com" \
   commit -m "message"

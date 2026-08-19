@@ -49,20 +49,7 @@ Acceptance criteria:
 
 - One Meta client report data matches Meta UI within expected reporting settings.
 
-## Phase 3: Google Ads Extractor
-
-Deliverables:
-
-- Google Ads API client.
-- GAQL campaign query.
-- GAQL conversion query.
-- Raw response persistence.
-
-Acceptance criteria:
-
-- One Google Ads client report data matches Google Ads UI with same date range/filtering.
-
-## Phase 4: Normalization And Storage
+## Phase 3: Normalization And Storage
 
 Deliverables:
 
@@ -76,7 +63,7 @@ Acceptance criteria:
 
 - Rerunning same client/month does not duplicate rows.
 
-## Phase 5: PDF Template
+## Phase 4: PDF Template
 
 Deliverables:
 
@@ -90,7 +77,7 @@ Acceptance criteria:
 
 - One client PDF visually matches approved sample/report direction.
 
-## Phase 6: Email Automation
+## Phase 5: Email Automation
 
 Deliverables:
 
@@ -103,7 +90,7 @@ Acceptance criteria:
 
 - Test PDF is emailed to `reports@trafficdigitalsolutions.com`.
 
-## Phase 7: Batch Runner
+## Phase 6: Batch Runner
 
 Deliverables:
 
@@ -117,7 +104,7 @@ Acceptance criteria:
 - All configured clients process in one run.
 - Failures are isolated and clear.
 
-## Phase 8: Linux Scheduling
+## Phase 7: Linux Scheduling
 
 Deliverables:
 
@@ -130,7 +117,7 @@ Acceptance criteria:
 
 - Timer runs monthly without manual intervention.
 
-## Phase 9: QA And Production Hardening
+## Phase 8: QA And Production Hardening
 
 Deliverables:
 
@@ -150,7 +137,7 @@ Acceptance criteria:
 Recommended order:
 
 1. Sample report mapping.
-2. Config and Meta/Google data extraction.
+2. Config and Meta data extraction.
 3. PDF generation.
 4. Email sending.
 5. Scheduler.

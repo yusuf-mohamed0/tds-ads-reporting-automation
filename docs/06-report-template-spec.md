@@ -18,7 +18,7 @@ Required elements:
 - Traffic Digital Solutions logo.
 - Client name.
 - Report month and year.
-- Platforms included: Meta Ads, Google Ads, or both.
+- Platforms included: Meta Ads only.
 - Prepared by Traffic Digital Solutions.
 
 ## Page 2: Executive Summary
@@ -45,7 +45,7 @@ Charts:
 
 - Daily spend trend.
 - Daily results/conversions trend.
-- Platform spend split if both Meta and Google Ads exist.
+- Platform spend split across Meta ad accounts.
 
 Table:
 
@@ -88,33 +88,6 @@ Charts:
 - Spend vs results by day.
 - Campaign spend/result bar chart.
 
-## Google Ads Section
-
-Include when client has Google Ads enabled.
-
-KPIs:
-
-- Cost.
-- Impressions.
-- Clicks.
-- CTR.
-- Average CPC.
-- Conversions.
-- Cost per conversion.
-- Conversion value.
-- ROAS.
-
-Tables:
-
-- Campaign performance.
-- Optional search terms.
-- Optional device or location breakdown.
-
-Charts:
-
-- Cost vs conversions by day.
-- Campaign cost/conversions bar chart.
-
 ## Best And Weak Campaigns
 
 Best campaign logic:
@@ -139,7 +112,6 @@ Automated recommendation rules can start simple:
 - If CTR dropped: refresh ad creative/copy.
 - If CPA increased: reallocate budget to lower CPA campaigns.
 - If frequency is high on Meta: rotate creatives or expand audience.
-- If Google search term waste is high: add negatives.
 
 Manual note override should be allowed in client config or monthly notes file.
 
@@ -169,15 +141,3 @@ Optional definitions:
 - Results: mapped from `actions`
 - Cost per result: mapped from `cost_per_action_type`
 - ROAS: `purchase_roas`
-
-### Google Ads
-
-- Cost: `metrics.cost_micros / 1_000_000`
-- Impressions: `metrics.impressions`
-- Clicks: `metrics.clicks`
-- CTR: `metrics.ctr`
-- Average CPC: `metrics.average_cpc`
-- Conversions: `metrics.conversions`
-- Cost per conversion: `metrics.cost_per_conversion`
-- Conversion value: `metrics.conversions_value`
-- ROAS: `metrics.conversions_value / cost`

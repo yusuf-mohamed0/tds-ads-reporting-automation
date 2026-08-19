@@ -13,7 +13,6 @@ from tds_ads_reporting.meta.page import (
     fetch_page_metrics,
     fetch_top_posts,
 )
-from tds_ads_reporting.google_ads.ads import GoogleAdsSummary, fetch_campaigns
 
 
 @dataclass
@@ -22,20 +21,19 @@ class FetchedData:
     page: PageMetrics | None = None
     top_posts: list | None = None
     instagram: InstagramMetrics | None = None
-    google_ads: GoogleAdsSummary | None = None
 
 
 def fetch_all(
     meta_token: str,
     meta_version: str,
-    google_yaml: str,
     client: Client,
     month: str,
+    meta_page_token: str | None = None,
     fetch_meta: bool = True,
-    fetch_google: bool = True,
     cache=None,
 ) -> FetchedData:
     data = FetchedData()
+    page_token = meta_page_token or meta_token
     if fetch_meta and client.meta.ad_accounts:
         data.meta_ads = _cached(cache, client.id, month, "meta_ads",
                                 lambda: fetch_campaign_insights(
@@ -43,17 +41,14 @@ def fetch_all(
                                 ))
         if client.meta.page_id:
             data.page = _cached(cache, client.id, month, "page",
-                                lambda: fetch_page_metrics(meta_token, meta_version, client.meta.page_id, month))
+                                lambda: fetch_page_metrics(page_token, meta_version, client.meta.page_id, month))
             data.top_posts = _cached(cache, client.id, month, "top_posts",
-                                     lambda: fetch_top_posts(meta_token, meta_version, client.meta.page_id, month))
+                                     lambda: fetch_top_posts(page_token, meta_version, client.meta.page_id, month))
         if client.meta.instagram_id:
             data.instagram = _cached(cache, client.id, month, "instagram",
                                      lambda: fetch_instagram_metrics(
-                                         meta_token, meta_version, client.meta.instagram_id, month
+                                         page_token, meta_version, client.meta.instagram_id, month
                                      ))
-    if fetch_google and client.google_ads.customer_ids:
-        data.google_ads = _cached(cache, client.id, month, "google_ads",
-                                  lambda: fetch_campaigns(google_yaml, client.google_ads.customer_ids[0], month))
     return data
 
 
@@ -79,7 +74,6 @@ def _serialize(value):
 
 
 def _deserialize(data: dict, platform: str):
-    from tds_ads_reporting.google_ads.ads import GoogleAdsSummary, GoogleCampaign
     from tds_ads_reporting.meta.ads import AdsSummary, CampaignRow
     from tds_ads_reporting.meta.page import InstagramMetrics, PageMetrics, PostRow
 
@@ -92,9 +86,6 @@ def _deserialize(data: dict, platform: str):
         return [PostRow(**d) for d in data]
     if platform == "instagram":
         return InstagramMetrics(**data)
-    if platform == "google_ads":
-        campaigns = [GoogleCampaign(**d) for d in data.get("campaigns", [])]
-        return GoogleAdsSummary(**{**data, "campaigns": campaigns})
     return data
 
 
@@ -122,8 +113,6 @@ def build_context(
     platforms = []
     if client.meta.ad_accounts:
         platforms.append("Meta (Facebook & Instagram)")
-    if client.google_ads.customer_ids:
-        platforms.append("Google Ads")
 
     reach: list[dict] = []
     messaging: list[dict] = []
@@ -243,28 +232,6 @@ def build_context(
                         "reach": _fmt_num(c.reach),
                     }
                     for c in ads_summary.campaigns
-                ],
-            }
-        )
-
-    if data.google_ads:
-        g = data.google_ads
-        ads.append(
-            {
-                "name": "Google Ads",
-                "spend": _fmt_money(g.total_cost, g.currency or currency),
-                "impressions": _fmt_num(g.total_impressions),
-                "reach": "-",
-                "campaigns": [
-                    {
-                        "name": c.name,
-                        "results": _fmt_num(int(c.results)),
-                        "cost_per_result": _fmt_money(c.cost_per_result, g.currency or currency),
-                        "spend": _fmt_money(c.cost, g.currency or currency),
-                        "impressions": _fmt_num(c.impressions),
-                        "reach": "-",
-                    }
-                    for c in g.campaigns
                 ],
             }
         )

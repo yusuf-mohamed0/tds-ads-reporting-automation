@@ -3,11 +3,10 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from tds_ads_reporting.config import Client, GoogleAdsConfig, MetaConfig
+from tds_ads_reporting.config import Client, MetaConfig
 from tds_ads_reporting.manual_inputs.loader import ManualInputs
 from tds_ads_reporting.meta.ads import AdsSummary, CampaignRow
 from tds_ads_reporting.meta.page import InstagramMetrics, PageMetrics, PostRow
-from tds_ads_reporting.google_ads.ads import GoogleAdsSummary, GoogleCampaign
 from tds_ads_reporting.reporting.assembler import FetchedData, build_context
 from tds_ads_reporting.reporting.pdf import render_pdf
 
@@ -23,7 +22,6 @@ def _client() -> Client:
             page_id="123",
             instagram_id="456",
         ),
-        google_ads=GoogleAdsConfig(customer_ids=["777"]),
     )
 
 
@@ -81,26 +79,6 @@ def _data() -> FetchedData:
                 {"values": [{"value": {"18-24": {"F": 10, "M": 5}, "25-34": {"F": 20, "M": 15}}}]}
             ],
         ),
-        google_ads=GoogleAdsSummary(
-            customer_id="777",
-            month="2026-03",
-            currency="EGP",
-            timezone="Africa/Cairo",
-            campaigns=[
-                GoogleCampaign(
-                    campaign_id=999,
-                    name="Search Campaign",
-                    status="ENABLED",
-                    channel_type="SEARCH",
-                    results=12.0,
-                    cost_per_result=188.0,
-                    cost=2256.0,
-                    impressions=5000,
-                    clicks=100,
-                    ctr=2.0,
-                )
-            ],
-        ),
     )
 
 
@@ -115,12 +93,12 @@ class TestBuildContext(unittest.TestCase):
         )
         ctx = build_context(_client(), "2026-03", manual, _data(), "March 2026", "2026-03-01", "2026-03-31")
 
-        self.assertEqual(ctx["platforms_label"], "Meta (Facebook & Instagram) & Google Ads")
+        self.assertEqual(ctx["platforms_label"], "Meta (Facebook & Instagram)")
         self.assertEqual(len(ctx["reach"]), 2)
         self.assertEqual(len(ctx["messaging"]), 1)
         self.assertEqual(len(ctx["content"]), 2)
         self.assertEqual(len(ctx["audience"]), 2)
-        self.assertEqual(len(ctx["ads"]), 2)
+        self.assertEqual(len(ctx["ads"]), 1)
         self.assertEqual(ctx["budget"]["amount"], "63,600 EGP")
         self.assertEqual(ctx["ads"][0]["campaigns"][0]["name"], "Leads Campaign")
         self.assertEqual(ctx["audience"][1]["demographics"][0]["female"], "10")
@@ -135,7 +113,7 @@ class TestRenderPdf(unittest.TestCase):
             "month_label": "March 2026",
             "date_start": "2026-03-01",
             "date_stop": "2026-03-31",
-            "platforms_label": "Meta & Google Ads",
+            "platforms_label": "Meta",
             "toc": ["Report Scope"],
             "scope_prose": "x",
             "scope_notes": "",

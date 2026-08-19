@@ -1,6 +1,6 @@
 # Phase 0 — API Knowledge & Requirements (researched Aug 2026)
 
-Consolidated findings from official Meta + Google Ads documentation research.
+Consolidated findings from official Meta documentation research.
 This is the authoritative basis for the data-fetch modules. Anything in here that
 differs from earlier docs supersedes them.
 
@@ -108,69 +108,16 @@ GET /v26.0/act_<AD_ACCOUNT_ID>/insights
 
 ---
 
-## 3. Google Ads API — v25 (client library 31.2.0)
+## 3. Consolidated data model for the report
 
-### Auth & config
-- OAuth2 installed-app (`client_id`, `client_secret`, `refresh_token`) or service account.
-- `login_customer_id` (MCC, no dashes) required for MCC-level calls; each query targets one `customer_id`.
-- `google-ads.yaml` structure: `developer_token`, `use_proto_plus: true`, `client_id`, `client_secret`,
-  `refresh_token`, `login_customer_id`, optional `json_key_file_path`/`impersonated_email`, `logging`.
-- `GoogleAdsClient.load_from_storage(path=..., version="v25")`. Default path `~/google-ads.yaml`.
-- Access levels: Test (test accts only) → Explorer (2,880 prod ops/day) → Basic (15,000/day) →
-  Standard (unlimited). New tokens start Test; Basic review ~5 days, Standard ~10 days.
-  Sliding 24h window; violation → `RESOURCE_EXHAUSTED`.
-
-### GAQL monthly per-campaign query
-```sql
-SELECT campaign.name, campaign.status, campaign.advertising_channel_type,
-       metrics.clicks, metrics.impressions, metrics.ctr, metrics.average_cpc,
-       metrics.cost_micros, metrics.conversions, metrics.conversions_value,
-       metrics.cost_per_conversion
-FROM campaign
-WHERE segments.date >= '2026-07-01' AND segments.date <= '2026-07-31'
-  AND campaign.status != 'REMOVED'
-```
-- Custom date ranges: `YYYY-MM-DD` or `YYYYMMDD`; `BETWEEN` / `>=,<=` / `DURING LAST_30_DAYS` etc.
-- `segments.date` is in the customer's timezone. If segments.date in SELECT → finite date range in WHERE required.
-- **37-month lookback limit on `segments.date`** since June 1, 2026 (use segments.month for older data).
-- `customer.currency_code`, `customer.time_zone` available via `SELECT customer.currency_code ... FROM customer`.
-- **Cost micros** → divide by 1,000,000. **Conversions not additive** across dates (conversion lag):
-  sum `conversions_by_conversion_date` for monthly totals, or footnote that recent months keep rising.
-  `cost_micros`, `clicks`, `impressions`, `ctr` ARE additive.
-- Conversion breakdown by action: `segments.conversion_action` + `conversion_action` resource
-  (`conversion_action.type` = e.g. `PHONE_CALL` for calls).
-- v25 `SearchGoogleAdsRequest` has NO `date_range` field — filter via GAQL only. `page_size` deprecated.
-
-### Python usage
-- `search_stream` → iterator of `GoogleAdsRow`. **Keep the iterator in the same scope as the
-  GoogleAdsService client** (gRPC channel GC → broken stream). Don't create service in a helper
-  and return only the iterator.
-- One SearchStream call = 1 API operation regardless of batch size. Stream for big reports (64MB gRPC limit).
-- `Client.load_from_storage`; `client.get_service("GoogleAdsService")`; build GAQLQueryRequest with
-  `customer_id`, `query`, `search_settings`.
-
-### Quotas & errors
-- QPS metered per customer ID AND per developer token (token bucket). Violation → `RESOURCE_TEMPORARILY_EXHAUSTED`.
-- Resource consumption throttling: `EXCESSIVE_SHORT_TERM_QUERY_RESOURCE_CONSUMPTION` (retry 5 min),
-  `EXCESSIVE_LONG_TERM` (30 min). Avoid per-campaign loops — one query per account per month.
-- Best practice: cache historical months; sequential queries with client-side QPS cap.
-
-### Version timeline (2026)
-- v25 released Jul 22, 2026 (sunset Aug 2027). Client 31.2.0 supports v21–v25, defaults v25.
-- ~5 majors kept; upgrade ≤2/yr.
-
----
-
-## 4. Consolidated data model for the report
-
-| Report section | Meta ads (Marketing API) | Meta Page/IG (Graph API) | Google Ads (GAQL) |
-|---|---|---|---|
-| Reach | campaign reach (sum) | page_total_media_view_unique (FB) + reach (IG); organic/paid via page_media_view is_from_ads | N/A (impressions only) |
-| Messaging | results where objective=MESSAGES / onsite_conversion.messaging | page_messages_new_conversations_unique | conversions where conversion_action.type=PHONE_CALL / Lead |
-| Content (top posts) | — | post_total_media_view_unique (FB) + media insights (IG) | — |
-| Audience | — | page_follows + page_follows_country (FB); follower_count + follower_demographics gender/age (IG only) | — |
-| Ads campaigns | level=campaign insights | — | campaign GAQL rows |
-| Budget/Spend | spend | — | cost_micros ÷ 1e6 |
+| Report section | Meta ads (Marketing API) | Meta Page/IG (Graph API) |
+|---|---|---|
+| Reach | campaign reach (sum) | page_total_media_view_unique (FB) + reach (IG); organic/paid via page_media_view is_from_ads |
+| Messaging | results where objective=MESSAGES / onsite_conversion.messaging | page_messages_new_conversations_unique |
+| Content (top posts) | — | post_total_media_view_unique (FB) + media insights (IG) |
+| Audience | — | page_follows + page_follows_country (FB); follower_count + follower_demographics gender/age (IG only) |
+| Ads campaigns | level=campaign insights | — |
+| Budget/Spend | spend | — |
 
 **Open design impact:** FB age/gender demographics are no longer available via API.
 The reference report's "Audience demographics" section can only be filled from
@@ -179,7 +126,7 @@ Instagram (`follower_demographics`) or a manual upload from Facebook Page Insigh
 
 ---
 
-## 5. Prerequisites checklist (what the client must provide)
+## 4. Prerequisites checklist (what the client must provide)
 
 ### Meta
 - [ ] Business Manager admin access
@@ -190,14 +137,6 @@ Instagram (`follower_demographics`) or a manual upload from Facebook Page Insigh
 - [ ] Permissions granted: pages_read_engagement, pages_read_user_content, instagram_basic, instagram_manage_insights, pages_messaging
 - [ ] App Review / Full access tier for >1 system user (or use Limited with 1 system user)
 
-### Google
-- [ ] MCC (Manager) account; login_customer_id
-- [ ] Google Cloud project + Google Ads API enabled
-- [ ] OAuth client (installed app) ID/secret
-- [ ] Developer token (production — Basic/Standard level for real accounts)
-- [ ] Refresh token (must generate once via OAuth consent)
-- [ ] Per-client customer IDs
-
 ### Ops
-- [ ] Token refresh automation (60-day Meta tokens; Google refresh tokens don't expire unless revoked)
+- [ ] Token refresh automation (60-day Meta tokens)
 - [ ] `.env` storage, never committed; secrets rotated
