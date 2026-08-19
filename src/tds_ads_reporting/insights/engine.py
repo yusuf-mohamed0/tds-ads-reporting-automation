@@ -330,7 +330,7 @@ def generate_insights(
         results_label=results_label,
     )
 
-    return {
+    payload = {
         "executive_summary": executive_summary,
         "kpis": kpis,
         "top_campaigns": top_campaigns,
@@ -344,6 +344,14 @@ def generate_insights(
         "results_label": results_label,
         "prev_month_label": month_label((dataset.prev_month or {}).get("month") or "") if dataset.prev_month else None,
     }
+    from tds_ads_reporting.insights.ai_insights import generate_ai_insights
+
+    ai = generate_ai_insights(client, dataset.month, payload)
+    if ai:
+        payload["ai"] = ai
+        if ai.get("summary"):
+            payload["executive_summary"] = ai["summary"]
+    return payload
 
 
 # ---------------------------------------------------------------------------
