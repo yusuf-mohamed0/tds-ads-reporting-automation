@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 .env
 configs/clients.generated.yaml
-reports/*.pdf
+reports/
 logs/
 data/*.db
 data/*.sqlite
