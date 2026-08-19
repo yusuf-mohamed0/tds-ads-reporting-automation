@@ -4,3 +4,4 @@ weasyprint>=62
 pyyaml>=6.0
 requests>=2.31
 python-dotenv>=1.0
+facebook_business>=20.0
