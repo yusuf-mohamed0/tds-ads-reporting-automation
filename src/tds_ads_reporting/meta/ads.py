@@ -80,6 +80,7 @@ class CampaignRow:
     currency: str = "EGP"
     actions: list[dict] = field(default_factory=list)
     lifecycle: str = ""
+    results_label: str = ""
 
     @property
     def clicks(self) -> int:
@@ -252,6 +253,55 @@ def _get_campaigns(access_token: str, api_version: str, ad_account_id: str) -> l
     return _rows_from_response(response)
 
 
+def _results_label(objective: str, actions: list[dict]) -> str:
+    """Human label for what 'results' means for a campaign.
+
+    Uses the dominant action type when available, falling back to the
+    campaign objective so the reader always knows WHAT the result is
+    (leads, messages, purchases, link clicks, engagement, video views...).
+    """
+    objective = (objective or "").upper()
+    by_type: dict[str, float] = {}
+    for item in actions or []:
+        at = str(item.get("action_type") or "")
+        value = parse_float(item.get("value"))
+        if at:
+            by_type[at] = by_type.get(at, 0.0) + value
+    if by_type:
+        dominant = max(by_type, key=by_type.get)
+        low = dominant.lower()
+        if "purchase" in low or low == "omni_purchase":
+            return "Purchases"
+        if "lead" in low or low == "on_view_portal" or "leadgen" in low:
+            return "Leads"
+        if "messaging" in low or low == "onsite_conversation_started" or "conversation" in low:
+            return "Messages"
+        if low == "link_click" or "link_click" in low:
+            return "Link Clicks"
+        if "video_view" in low or low == "video_views":
+            return "Video Views"
+        if "post_engagement" in low or low == "post_engagement":
+            return "Post Engagements"
+        if "post_reaction" in low:
+            return "Post Reactions"
+        if "comment" in low:
+            return "Comments"
+        if "app_install" in low or "mobile_app_install" in low:
+            return "App Installs"
+    objective_map = {
+        "OUTCOME_LEADS": "Leads",
+        "OUTCOME_CONVERSATIONS": "Messages",
+        "OUTCOME_SALES": "Conversions (Purchases)",
+        "OUTCOME_TRAFFIC": "Link Clicks",
+        "OUTCOME_ENGAGEMENT": "Post Engagements",
+        "OUTCOME_APP_PROMOTION": "App Installs",
+        "OUTCOME_VIDEO_VIEWS": "Video Views",
+        "OUTCOME_REACH": "Reach",
+        "OUTCOME_AWARENESS": "Awareness (Reach)",
+    }
+    return objective_map.get(objective, "Results")
+
+
 def _campaign_row(data: dict, currency: str) -> CampaignRow:
     return CampaignRow(
         campaign_id=str(data.get("campaign_id", "")),
@@ -269,6 +319,7 @@ def _campaign_row(data: dict, currency: str) -> CampaignRow:
         inline_link_clicks=parse_int(data.get("inline_link_clicks")),
         currency=currency,
         actions=data.get("actions") or [],
+        results_label=_results_label(data.get("objective", ""), data.get("actions") or []),
     )
 
 

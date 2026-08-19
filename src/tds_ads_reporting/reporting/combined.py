@@ -134,7 +134,8 @@ def render_combined_pdf(
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR), autoescape=select_autoescape(["html"]))
     template = env.get_template("combined_report.html.j2")
     html = template.render(**context)
-    out = OUTPUT_DIR / f"combined_{month}.pdf"
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = OUTPUT_DIR / "combined" / month
+    out = out_dir / f"combined_{month}.pdf"
+    out_dir.mkdir(parents=True, exist_ok=True)
     HTML(string=html, base_url=str(TEMPLATE_DIR)).write_pdf(out)
     return out

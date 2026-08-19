@@ -54,6 +54,7 @@ def _campaign_metrics(c: CampaignRow) -> dict[str, Any]:
         "start_time": c.start_time,
         "stop_time": c.stop_time,
         "lifecycle": c.lifecycle if getattr(c, "lifecycle", None) else "",
+        "results_label": c.results_label if getattr(c, "results_label", None) else "Results",
         "spend": round(c.spend, 2),
         "results": c.results,
         "cpr": round(c.cost_per_result or _safe_div(c.spend, c.results), 2),
@@ -225,11 +226,12 @@ def generate_insights(
 
     # ---- top / bottom campaigns ------------------------------------------
     ranked = sorted(campaigns, key=lambda c: (c.results, c.spend), reverse=True)
-    top_campaigns = [_campaign_metrics(c) for c in ranked[:5]]
+    campaign_metrics = [_campaign_metrics(c) for c in ranked]
+    top_campaigns = campaign_metrics[:5]
     for i, entry in enumerate(top_campaigns):
         entry["why"] = _why(entry, ranked)
 
-    bottom_campaigns = [_campaign_metrics(c) for c in ranked[-5:][::-1]]
+    bottom_campaigns = campaign_metrics[-5:][::-1]
     for entry in bottom_campaigns:
         entry["flags"] = _weakness_flags(entry, cpr)
 
@@ -311,6 +313,7 @@ def generate_insights(
     )
 
     # ---- executive summary ------------------------------------------------
+    results_label = _dominant_results_label(campaign_metrics)
     executive_summary = _executive_summary(
         client=client,
         month=dataset.month,
@@ -324,6 +327,7 @@ def generate_insights(
         top=top_campaigns[0] if top_campaigns else None,
         recommendation=recommendations[0] if recommendations else None,
         currency=currency,
+        results_label=results_label,
     )
 
     return {
@@ -337,6 +341,7 @@ def generate_insights(
         "mom": mom,
         "platforms": platform_rows,
         "data_quality": data_quality,
+        "results_label": results_label,
         "prev_month_label": month_label((dataset.prev_month or {}).get("month") or "") if dataset.prev_month else None,
     }
 
@@ -604,6 +609,17 @@ def _build_recommendations(
 # ---------------------------------------------------------------------------
 
 
+def _dominant_results_label(campaign_metrics: list[dict[str, Any]]) -> str:
+    """Weighted dominant 'what the results are' label across campaigns."""
+    weights: dict[str, int] = {}
+    for cm in campaign_metrics:
+        label = cm.get("results_label") or "Results"
+        weights[label] = weights.get(label, 0) + int(cm.get("results") or 0)
+    if not weights:
+        return "Results"
+    return max(weights, key=weights.get)
+
+
 def _executive_summary(
     client: Client,
     month: str,
@@ -617,11 +633,12 @@ def _executive_summary(
     top: dict[str, Any] | None,
     recommendation: str | None,
     currency: str,
+    results_label: str = "Results",
 ) -> str:
     sentences: list[str] = []
     sentences.append(
         f"In {month_label(month)}, {client.name} invested {_fmt_money(spend, currency)} across Meta, "
-        f"generating {_fmt_num(results)} results from {_fmt_num(impressions)} impressions."
+        f"generating {_fmt_num(results)} {results_label.lower()} from {_fmt_num(impressions)} impressions."
     )
     if top:
         sentences.append(

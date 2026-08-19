@@ -87,7 +87,7 @@
       </div>
     </div>
     <div class="kpi-card">
-      <div class="label">Results</div>
+      <div class="label">Results <span class="cell-sub">({{ results_label | default('Results') }})</span></div>
       <div class="value">{{ k.results_fmt | default('0') }}</div>
       <div class="delta">
           {% if mom.results.delta_pct is defined and mom.results.delta_pct is not none %}
@@ -204,7 +204,7 @@
           {% else %}{{ row.status | default('-') }}{% endif %}
         </td>
         <td class="num">{{ row.spend_fmt }}</td>
-        <td class="num">{{ row.results }}</td>
+        <td class="num">{{ row.results }}<span class="cell-sub">{{ row.results_label | default('Results') }}</span></td>
         <td class="num">{{ row.cpr_fmt }}</td>
         <td class="num">{{ row.ctr }}%</td>
         <td class="num">{{ row.cpc }}</td>

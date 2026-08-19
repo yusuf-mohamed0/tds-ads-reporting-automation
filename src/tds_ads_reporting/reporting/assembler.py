@@ -564,6 +564,7 @@ def build_context(
         "mom": mom,
         "platforms": platform_rows,
         "data_quality": data_quality,
+        "results_label": insights_payload.get("results_label") or "Results",
         "prev_month_label": prev_month_label,
         "has_meta": dataset is not None,
         "has_page": data.page is not None,
