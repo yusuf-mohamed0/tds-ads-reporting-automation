@@ -159,8 +159,10 @@
 </div>
 {% endfor %}
 
-<!-- Audience: fixed Facebook and Instagram pages -->
+<!-- Audience: fixed Facebook and Instagram pages — uses Ads Insights demographic/country data when Page API unavailable -->
 {% set audience_rows = audience | default([]) %}
+{% set demo_rows = demographics | default([]) %}
+{% set country_data = countries | default([]) %}
 {% for platform_name in ['Facebook', 'Instagram'] %}
 {% set platform = audience_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
 <div class="page ref-page">
@@ -169,13 +171,26 @@
   <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
   {% if platform.followers is defined %}
   <div class="ref-card" style="width:55mm;"><div class="label">Followers</div><div class="value">{{ platform.followers }}</div></div>
+  {% endif %}
   {% if platform.geo %}
   <h3>Top Countries</h3>
   <table style="width:120mm"><thead><tr><th>Country</th><th class="num">Followers</th></tr></thead><tbody>
     {% for row in platform.geo %}<tr><td>{{ row.country }}</td><td class="num">{{ row.value }}</td></tr>{% endfor %}
   </tbody></table>
+  {% elif country_data %}
+  <h3>Top Countries (Paid Audience)</h3>
+  <table style="width:120mm;font-size:9pt"><thead><tr><th>Country</th><th class="num">Spend</th><th class="num">Impressions</th><th class="num">Results</th></tr></thead><tbody>
+    {% for row in country_data[:5] %}<tr><td>{{ row.label }}</td><td class="num">{{ row.spend_fmt }}</td><td class="num">{{ row.impressions_fmt }}</td><td class="num">{{ row.results_fmt }}</td></tr>{% endfor %}
+  </tbody></table>
   {% endif %}
-  {% else %}<p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — follower data unavailable.</p>{% endif %}
+  {% if demo_rows %}
+  <h3>Age &amp; Gender Distribution</h3>
+  <table style="width:120mm;font-size:9pt"><thead><tr><th>Age Group</th><th class="num">Female</th><th class="num">Male</th><th class="num">Total</th></tr></thead><tbody>
+    {% for row in demo_rows[:6] %}<tr><td>{{ row.age }}</td><td class="num">{{ row.female }}</td><td class="num">{{ row.male }}</td><td class="num">{{ row.total }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% elif not platform.followers is defined and not country_data %}
+  <p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — organic audience data unavailable. Ads Insights demographic data shown above when available.</p>
+  {% endif %}
 </div>
 {% endfor %}
 

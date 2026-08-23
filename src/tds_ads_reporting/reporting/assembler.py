@@ -211,14 +211,18 @@ def _bucket_rows(buckets: list[dict], currency: str) -> list[dict[str, Any]]:
     rows = []
     for b in buckets:
         share = float(b.get("pct", 0) or 0.0)
+        impressions = int(b.get("impressions", 0))
+        results = int(b.get("results", 0))
         rows.append(
             {
                 "label": b.get("label", ""),
                 "spend": float(b.get("spend", 0.0)),
                 "spend_fmt": _fmt_money(b.get("spend", 0.0), currency),
-                "impressions": int(b.get("impressions", 0)),
+                "impressions": impressions,
+                "impressions_fmt": _fmt_num(impressions),
                 "clicks": int(b.get("clicks", 0)),
-                "results": int(b.get("results", 0)),
+                "results": results,
+                "results_fmt": _fmt_num(results),
                 "ctr": float(b.get("ctr", 0.0)),
                 "pct": share,
                 "bar_width": max(share, 2.0) if share else 0.0,
@@ -258,7 +262,11 @@ def _demographic_rows(demographics: list[dict], currency: str) -> tuple[list[dic
     for cell in pivot.values():
         for key in ("M", "F", "total"):
             cell[key] = f"{cell[key]:,.0f}"
-    return rows, pivot
+    # Build audience-compatible list for the template: [{age, female, male, total}, ...]
+    audience_demo = []
+    for age_group, vals in pivot.items():
+        audience_demo.append({"age": age_group, "female": vals["F"], "male": vals["M"], "total": vals["total"]})
+    return rows, audience_demo
 
 
 def _flag_table_rows(campaign_rows: list[dict[str, Any]], insights_payload: dict[str, Any]) -> None:
@@ -653,8 +661,8 @@ def build_context(
         "devices": device_rows,
         "publishers": publisher_rows,
         "countries": country_rows,
-        "demographics": demographic_rows,
-        "age_gender": age_gender,
+        "demographics": age_gender,
+        "demographic_detail": demographic_rows,
         "dow_pacing": dow_series,
         "hour_pacing": hour_series,
         "top_adsets": top_adsets,
