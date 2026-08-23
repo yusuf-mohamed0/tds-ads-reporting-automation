@@ -221,11 +221,11 @@ class TestGenerateInsights(unittest.TestCase):
     def test_anomalies(self):
         anomalies = generate_insights(_dataset(), _manual(), _client())["anomalies"]
         joined = " | ".join(anomalies)
-        self.assertIn("instagram delivers 62% of impressions", joined)
-        self.assertIn("mobile drives 85% of clicks", joined)
-        self.assertIn("Spend moved up 33% vs the previous month", joined)
-        self.assertIn("Dead Spend spent 5,000 EGP with no results", joined)
-        self.assertIn("Egypt accounts for 75% of spend", joined)
+        self.assertIn("instagram alone delivered 62% of all impressions", joined)
+        self.assertIn("mobile devices drove 85% of clicks", joined)
+        self.assertIn("Ad spend moved up 33% versus February 2026", joined)
+        self.assertIn("'Dead Spend' spent 5,000 EGP and produced no results", joined)
+        self.assertIn("Egypt accounts for 75% of total spend", joined)
 
     def test_recommendations(self):
         recs = generate_insights(_dataset(), _manual(), _client())["recommendations"]

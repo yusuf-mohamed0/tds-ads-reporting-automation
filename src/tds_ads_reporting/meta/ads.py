@@ -253,7 +253,7 @@ def _get_campaigns(access_token: str, api_version: str, ad_account_id: str) -> l
     return _rows_from_response(response)
 
 
-def _results_label(objective: str, actions: list[dict]) -> str:
+def _results_label(objective: str, actions: list[dict], results: int = 0) -> str:
     """Human label for what 'results' means for a campaign.
 
     Uses the dominant action type when available, falling back to the
@@ -268,8 +268,9 @@ def _results_label(objective: str, actions: list[dict]) -> str:
         if at:
             by_type[at] = by_type.get(at, 0.0) + value
     if by_type:
-        dominant = max(by_type, key=by_type.get)
-        low = dominant.lower()
+        matched = [action for action, value in by_type.items() if results and round(value) == results]
+        action = matched[0] if len(matched) == 1 else max(by_type, key=by_type.get)
+        low = action.lower()
         if "purchase" in low or low == "omni_purchase":
             return "Purchases"
         if "lead" in low or low == "on_view_portal" or "leadgen" in low:
@@ -319,7 +320,9 @@ def _campaign_row(data: dict, currency: str) -> CampaignRow:
         inline_link_clicks=parse_int(data.get("inline_link_clicks")),
         currency=currency,
         actions=data.get("actions") or [],
-        results_label=_results_label(data.get("objective", ""), data.get("actions") or []),
+        results_label=_results_label(
+            data.get("objective", ""), data.get("actions") or [], parse_int(data.get("results"))
+        ),
     )
 
 

@@ -3,768 +3,233 @@
 <head>
 <meta charset="utf-8">
 {% include '_styles.html.j2' %}
+<style>
+  @page dark {
+    size: 10in 7.5in;
+    margin: 0;
+    background: #171414;
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; border: 0; }
+    @bottom-right { content: ""; }
+  }
+  .ref-page { min-height: 160mm; padding-top: 0; }
+  .ref-page::before { display: none !important; }
+  .ref-head { display: flex; align-items: center; gap: 13mm; margin-bottom: 13mm; }
+  .ref-mark { width: 24mm; height: 8.5mm; object-fit: contain; }
+  .ref-nav { display: flex; align-items: center; gap: 7mm; color: #747474; font-size: 9pt; white-space: nowrap; }
+  .ref-nav span.active { color: #171414; font-weight: 700; border: 1.5px solid #DFA629; border-radius: 50%; padding: 2.5mm 4mm; }
+  .ref-title { margin: 0; color: #171414; font-size: 27pt; line-height: 1; text-transform: uppercase; }
+  .ref-subtitle { margin: 3mm 0 8mm 0; font-size: 14pt; }
+  .ref-subtitle strong { display: inline-block; min-width: 32mm; font-weight: 400; }
+  .ref-hand { color: #DFA629; font-family: 'Reenie Beanie'; font-size: 23pt; line-height: .8; }
+  .ref-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 7mm 0; }
+  .ref-card { border: 1px solid #E1E1E1; border-top: 2px solid #FCB900; padding: 4mm; }
+  .ref-card .label { color: #747474; font-size: 8pt; text-transform: uppercase; }
+  .ref-card .value { margin-top: 1mm; color: #171414; font-size: 19pt; font-weight: 600; }
+  .ref-note { font-size: 11pt; line-height: 1.55; }
+  .ref-page table { font-size: 9pt; }
+  .ref-page th { font-size: 8.5pt; }
+  .budget-grid { width: 128mm; margin: 18mm 0 0 8mm; font-size: 22pt; }
+  .budget-row { display: grid; grid-template-columns: 45mm 1fr; border-bottom: 2px solid #171414; padding: 4mm 0; }
+  .budget-row:last-child { border-bottom: 0; }
+  .insight-list { margin: 8mm 0 0 0; padding-left: 7mm; font-size: 11pt; line-height: 1.35; }
+  .insight-list li { margin-bottom: 3.5mm; }
+  .contents-page { page: dark; width: 254mm; height: 190.5mm; padding: 14mm 16mm; color: #FFFFFF; background: #171414; }
+  .contents-page::before { display: none !important; }
+  .contents-page .ref-mark { content: url('assets/company/image6.png'); }
+  .contents-title { margin: 15mm 0 15mm 0; font-size: 28pt; }
+  .contents-grid { display: grid; grid-template-columns: 1fr 1.6fr 22mm; gap: 5mm 8mm; font-size: 18pt; font-weight: 700; }
+  .contents-line { border-bottom: 1px solid #DFA629; }
+  .contents-page-number { font-size: 12pt; font-weight: 400; }
+  .thank-title { margin-top: 72mm; font-size: 38pt; font-style: italic; line-height: 1.05; }
+  .ref-scope { margin-top: 12mm; font-size: 15pt; line-height: 1.5; }
+  [dir="rtl"] { font-family: 'Alexandria'; }
+</style>
 </head>
 <body>
 
-{% set sections = include_sections | default([]) %}
-{% set k = kpis | default({}) %}
-{% set pace = pacing | default({}) %}
-{% set plats = platforms | default([]) %}
-{% set mom_camps = mom.campaigns | default({}) %}
+{% macro nav(active) -%}
+<div class="ref-head">
+  <img class="ref-mark" src="assets/company/image8.png" alt="Traffic">
+  <div class="ref-nav">
+    {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
+    <span class="{% if item == active %}active{% endif %}">{{ item }}</span>
+    {% endfor %}
+  </div>
+</div>
+{%- endmacro %}
 
-<!-- ================= COVER ================= -->
-<div class="page">
+<!-- Cover -->
+<div class="page cover-page">
   <div class="cover">
-    <div class="cover-head">
-      <div class="cover-brand">TRAFFIC DIGITAL SOLUTIONS</div>
-      <div class="cover-mark">T</div>
-    </div>
+    <div class="cover-head"><div class="cover-brand">Traffic</div></div>
     <div>
-      <div class="cover-kicker">Media Buying Performance Report</div>
-      <h1 class="cover-title" style="margin-top:14px">{{ client.name | default('Client') }}</h1>
-      <div class="cover-sub">{{ month_label | default('') }} &mdash; Monthly Performance</div>
-      <div class="cover-rule"></div>
-      <div class="cover-meta">
-        <div><strong>Reporting Period:</strong> {{ date_start | default('') }} &mdash; {{ date_stop | default('') }}</div>
-        <div><strong>Platforms:</strong> {{ platforms_label | default('-') }}</div>
-        <div><strong>Data Source:</strong> Meta Ads Manager / Meta Business Suite (Meta Marketing API)</div>
-        <div><strong>Prepared by:</strong> Traffic Digital Solutions</div>
-        <div class="muted"><strong>Prepared on:</strong> {{ report_date | default('') }}</div>
-      </div>
+      <div class="cover-kicker">MARKETING<br>REPORT</div>
+      <h1 class="cover-title">Client Name: {{ client.name | default('Client') }}</h1>
+      <div class="cover-sub">Date: {{ report_date | default('') }}</div>
     </div>
-    <div class="cover-foot">
-      Confidential &middot; Prepared exclusively for {{ client.name | default('the client') }} &middot; Contains commercially sensitive performance data
-    </div>
+    <div></div>
   </div>
 </div>
 
-<!-- ================= TABLE OF CONTENTS ================= -->
-<div class="page">
-  <h2 class="section">Table of Contents</h2>
-  {% set toc_items = [] %}
-  {% if 'executive_summary' in sections and (executive_summary | default('') or k) %}{% set _ = toc_items.append('Executive Summary') %}{% endif %}
-  {% if 'campaign_performance' in sections and (campaigns | default([])) %}{% set _ = toc_items.append('Campaign Performance') %}{% endif %}
-  {% if plats %}{% set _ = toc_items.append('Platform Performance (Facebook vs Instagram)') %}{% endif %}
-  {% if 'conversions' in sections and (conversions | default([])) %}{% set _ = toc_items.append('Conversion Breakdown') %}{% endif %}
-  {% if 'distribution' in sections and (publishers | default([]) or devices | default([]) or countries | default([])) %}{% set _ = toc_items.append('Distribution') %}{% endif %}
-  {% if 'audience' in sections and (demographics | default([]) or dow_pacing | default([]) or age_gender | default({})) %}{% set _ = toc_items.append('Audience Insights') %}{% endif %}
-  {% if 'page_instagram' in sections and (reach | default([]) or messaging | default([]) or content | default([]) or audience | default([])) %}{% set _ = toc_items.append('Page & Instagram') %}{% endif %}
-  {% if 'recommendations' in sections and (recommendations | default([])) %}{% set _ = toc_items.append('Recommendations') %}{% endif %}
-  {% if 'appendix' in sections %}{% set _ = toc_items.append('Appendix') %}{% endif %}
-  {% for item in toc_items %}
-  <div class="toc-line"><span><span class="toc-num">{{ loop.index }}</span>{{ item }}</span></div>
-  {% endfor %}
-  {% if scope_prose %}
-  <h3 class="block" style="margin-top:24px">Report Scope</h3>
-  <div class="prose">{{ scope_prose }}</div>
-  {% if scope_notes %}<div class="prose" style="margin-top:10px">{{ scope_notes }}</div>{% endif %}
-  {% endif %}
-</div>
-
-<!-- ================= EXECUTIVE SUMMARY ================= -->
-{% if 'executive_summary' in sections and (executive_summary | default('') or k) %}
-<div class="page">
-  <h2 class="section">Executive Summary</h2>
-
-  {% if executive_summary %}
-  <div class="exec-box">
-    <h3>{{ month_label | default('') }} AT A GLANCE</h3>
-    <p>{{ executive_summary }}</p>
-  </div>
-  {% endif %}
-
-  {% if k %}
-  <h3 class="block">Key Performance Indicators</h3>
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="label">Amount Spent</div>
-      <div class="value">{{ k.spend_fmt | default('0') }}</div>
-      <div class="delta">
-          {% if mom.spend.delta_pct is defined and mom.spend.delta_pct is not none %}
-            {% if mom.spend.delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif mom.spend.delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% else %}<span class="delta-arrow flat">&#9650;</span>{% endif %}
-            {{ mom.spend.delta_pct | abs }}% vs prev month
-          {% else %}<span class="flat">no prior data</span>{% endif %}
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">Results <span class="cell-sub">({{ results_label | default('Results') }})</span></div>
-      <div class="value">{{ k.results_fmt | default('0') }}</div>
-      <div class="delta">
-          {% if mom.results.delta_pct is defined and mom.results.delta_pct is not none %}
-            {% if mom.results.delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif mom.results.delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% else %}<span class="delta-arrow flat">&#9650;</span>{% endif %}
-            {{ mom.results.delta_pct | abs }}% vs prev month
-          {% else %}<span class="flat">no prior data</span>{% endif %}
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">Cost Per Result</div>
-      <div class="value">{{ k.cpr_fmt | default('0') }}</div>
-      <div class="delta">
-          {% if mom.cpr.delta_pct is defined and mom.cpr.delta_pct is not none %}
-            {% if mom.cpr.delta_pct > 0 %}<span class="delta-arrow down">&#9650;</span>{% elif mom.cpr.delta_pct < 0 %}<span class="delta-arrow up">&#9660;</span>{% else %}<span class="delta-arrow flat">&#9660;</span>{% endif %}
-            {{ mom.cpr.delta_pct | abs }}% vs prev month
-          {% else %}<span class="flat">no prior data</span>{% endif %}
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">CTR</div>
-      <div class="value">{{ k.ctr | default(0) }}%</div>
-      <div class="delta">
-          {% if mom.ctr.delta_pct is defined and mom.ctr.delta_pct is not none %}
-            {% if mom.ctr.delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif mom.ctr.delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% else %}<span class="delta-arrow flat">&#9650;</span>{% endif %}
-            {{ mom.ctr.delta_pct | abs }}% vs prev month
-          {% else %}<span class="flat">no prior data</span>{% endif %}
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">Impressions</div>
-      <div class="value">{{ k.impressions_fmt | default('0') }}</div>
-      <div class="sub">Reach: {{ k.reach_fmt | default('0') }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">Frequency</div>
-      <div class="value">{{ k.frequency | default(0) }}</div>
-      <div class="sub">Impressions &divide; reach</div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">CPC</div>
-      <div class="value">{{ k.cpc | default(0) }}</div>
-      <div class="sub">CPM: {{ k.cpm | default(0) }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="label">{% if k.primary_action %}{{ k.primary_action }} CPA{% else %}CPA{% endif %}</div>
-      <div class="value">{{ k.cpa_primary_fmt | default('&mdash;') }}</div>
-      {% if k.roas is not none %}<div class="sub">ROAS: <strong>{{ k.roas_fmt }}</strong></div>{% else %}<div class="sub">ROAS: n/a</div>{% endif %}
-    </div>
-  </div>
-
-  {% if k.budget_amount_fmt %}
-  <h3 class="block">Budget Utilization</h3>
-  <div class="util-wrap">
-    <div class="util-label">
-      <span><strong>{{ k.spend_fmt | default('0') }}</strong> spent of {{ k.budget_amount_fmt | default('0') }}</span>
-      <span><strong>{{ k.budget_utilization | default(0) }}%</strong> utilized</span>
-    </div>
-    <div class="util-track">
-      <div class="util-fill {% if k.budget_utilization | default(0) > 100 %}over{% endif %}"
-           style="width: {{ [k.budget_utilization | default(0), 100] | min }}%"></div>
-    </div>
-  </div>
-  {% endif %}
-  {% endif %}
-
-  {% if anomalies %}
-  <h3 class="block">Notable Findings</h3>
-  <div class="anomaly-box">
-    <ul>
-      {% for a in anomalies %}<li>{{ a }}</li>{% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  {% if ai %}
-  <h3 class="block">AI Analyst Insight</h3>
-  <div class="ai-box">
-    {% if ai.summary %}<p class="lead">{{ ai.summary }}</p>{% endif %}
-    {% if ai.findings %}
-    <h4>Key Findings</h4>
-    <ul>
-      {% for f in ai.findings %}<li>{{ f }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-    {% if ai.recommendations %}
-    <h4>Recommendations</h4>
-    <ul>
-      {% for r in ai.recommendations %}<li>{{ r }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-    {% if ai.warnings %}
-    <h4>Warnings</h4>
-    <ul>
-      {% for w in ai.warnings %}<li>{{ w }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-    <p class="muted small">Generated by AI ({{ ai.generated_at | default('') }}) from the exact figures in this report; reviewed against source data by the reporting engine.</p>
-  </div>
-  {% endif %}
-</div>
-{% endif %}
-
-<!-- ================= CAMPAIGN PERFORMANCE ================= -->
-{% if 'campaign_performance' in sections and (campaigns | default([])) %}
-<div class="page">
-  <h2 class="section">Campaign Performance</h2>
-  <p class="lead muted">
-    All campaigns for {{ month_label | default('') }}. MoM column shows spend change vs {{ prev_month_label | default('the previous month') }}.
-  </p>
-  <table>
-    <colgroup>
-      <col style="width:34%"><col style="width:9%"><col style="width:11%"><col style="width:12%"><col style="width:11%"><col style="width:8%"><col style="width:9%"><col style="width:6%">
-    </colgroup>
-    <thead>
-      <tr>
-        <th>Campaign</th>
-        <th>Run</th>
-        <th class="num">Spend</th>
-        <th class="num">Results</th>
-        <th class="num">CPR</th>
-        <th class="num">CTR</th>
-        <th>Share of Spend</th>
-        <th class="num">MoM</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in campaigns %}
-      <tr class="{% if row.is_top %}row-top{% elif row.is_bottom %}row-bottom{% endif %}">
-        <td>
-          {{ row.name }}
-          {% if row.is_top %}<span class="badge top">TOP</span>{% endif %}
-          {% if row.is_bottom %}<span class="badge bottom">WEAK</span>{% endif %}
-          <span class="cell-sub">{{ row.objective | default('-') }} &middot; CPC {{ row.cpc | default(0) }} &middot; CPM {{ row.cpm | default(0) }} &middot; Freq {{ row.frequency | default(0) }}</span>
-        </td>
-        <td>
-          {% if row.lifecycle == 'carried-over' %}<span class="badge top">CARRIED OVER</span>
-          {% elif row.lifecycle == 'new' %}<span class="badge top">NEW</span>
-          {% elif row.lifecycle == 'ended' %}<span class="badge bottom">ENDED</span>
-          {% else %}{{ row.status | default('-') }}{% endif %}
-        </td>
-        <td class="num">{{ row.spend_fmt }}</td>
-        <td class="num">{{ row.results }}<span class="cell-sub">{{ row.results_label | default('Results') }}</span></td>
-        <td class="num">{{ row.cpr_fmt }}</td>
-        <td class="num">{{ row.ctr }}%</td>
-        <td>
-          <div class="share">
-            <div class="share-track"><div class="share-fill" style="width: {{ row.bar_width | default(0) }}%"></div></div>
-            <span class="small muted">{{ row.share_pct | default(0) }}%</span>
-          </div>
-        </td>
-        <td class="num">
-          {% if row.mom_spend_delta_pct is not none %}
-            {% if row.mom_spend_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif row.mom_spend_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ row.mom_spend_delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <p class="small muted">
-    All monetary values in {{ currency | default('EGP') }}. CPR = cost per result; CTR = click-through rate;
-    CPC = cost per click; CPM = cost per 1,000 impressions; Freq = average frequency.
-    "TOP" marks the best performers by results, "WEAK" marks the weakest with flags on cost, frequency or zero results.
-  </p>
-</div>
-{% endif %}
-
-<!-- ================= PLATFORM PERFORMANCE (FB vs IG) ================= -->
-{% if plats %}
-<div class="page">
-  <h2 class="section">Platform Performance &mdash; Facebook vs Instagram</h2>
-  <p class="lead muted">
-    Insights per platform for {{ month_label | default('') }}, split by Meta publisher platform (deduplicated reach).
-    MoM columns compare each platform against {{ prev_month_label | default('the previous month') }}.
-  </p>
-  <table>
-    <colgroup>
-      <col style="width:16%"><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:8%"><col style="width:5%">
-    </colgroup>
-    <thead>
-      <tr>
-        <th>Platform</th>
-        <th class="num">Spend</th>
-        <th class="num">MoM</th>
-        <th class="num">Results</th>
-        <th class="num">MoM</th>
-        <th class="num">CPR</th>
-        <th class="num">Impressions</th>
-        <th class="num">Reach</th>
-        <th class="num">CTR</th>
-        <th class="num">Share</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in plats %}
-      <tr>
-        <td><strong>{{ p.label }}</strong><span class="cell-sub">CPC {{ p.cpc | default(0) }} &middot; Freq {{ p.frequency | default(0) }} &middot; Conv {{ p.conversions_total | default(0) }}</span></td>
-        <td class="num">{{ p.spend_fmt }}</td>
-        <td class="num">
-          {% if p.mom_spend_pct is not none %}
-            {% if p.mom_spend_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif p.mom_spend_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ p.mom_spend_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ p.results_fmt }}</td>
-        <td class="num">
-          {% if p.mom_results_pct is not none %}
-            {% if p.mom_results_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif p.mom_results_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ p.mom_results_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ p.cpr | round(2) }}</td>
-        <td class="num">{{ p.impressions }}</td>
-        <td class="num">{{ p.reach }}</td>
-        <td class="num">{{ p.ctr }}%</td>
-        <td class="num">{{ p.share_pct }}%</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% if plats | length == 1 %}
-  <p class="small muted">Only one publisher platform had activity this month; check audience and placement settings to activate the other platform.</p>
-  {% endif %}
-</div>
-{% endif %}
-
-<!-- ================= MONTH-OVER-MONTH COMPARISON ================= -->
-{% if mom and (mom_camps or mom.new_campaigns or mom.stopped_campaigns or mom.carried_over) %}
-<div class="page">
-  <h2 class="section">Month-over-Month Comparison</h2>
-  <p class="lead muted">
-    Full comparison between {{ month_label | default('this month') }} and {{ prev_month_label | default('the previous month') }}.
-  </p>
-
-  <h3 class="block">Total KPIs</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>KPI</th>
-        <th class="num">{{ month_label | default('Current') }}</th>
-        <th class="num">{{ prev_month_label | default('Previous') }}</th>
-        <th class="num">Change</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for key, label in [('spend','Spend'), ('results','Results'), ('impressions','Impressions'), ('reach','Reach'), ('clicks','Clicks'), ('ctr','CTR'), ('cpc','CPC'), ('cpm','CPM'), ('cpr','Cost per Result'), ('frequency','Frequency')] %}
-      {% if mom[key] is defined %}
-      <tr>
-        <td>{{ label }}</td>
-        <td class="num">{{ mom[key].current | round(2) }}</td>
-        <td class="num">{{ mom[key].previous | round(2) if mom[key].previous is not none else '&mdash;' }}</td>
-        <td class="num">
-          {% if mom[key].delta_pct is not none %}
-            {% if mom[key].delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif mom[key].delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ mom[key].delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-      </tr>
-      {% endif %}
-      {% endfor %}
-    </tbody>
-  </table>
-
-  <h3 class="block">Campaign-level Comparison</h3>
-  <table>
-    <colgroup>
-      <col style="width:34%"><col style="width:12%"><col style="width:14%"><col style="width:10%"><col style="width:15%"><col style="width:15%">
-    </colgroup>
-    <thead>
-      <tr>
-        <th>Campaign</th>
-        <th>Run</th>
-        <th class="num">Last Month Spend</th>
-        <th class="num">Spend MoM</th>
-        <th class="num">Last Month Results</th>
-        <th class="num">Results MoM</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for cid, c in mom_camps.items() %}
-      <tr>
-        <td>{{ c.name }}<span class="cell-sub">CPR {{ c.cpr_prev | round(2) if c.cpr_prev else '-' }} &middot; Impr {{ c.impressions_prev if c.impressions_prev else '-' }} &middot; CTR MoM {{ c.ctr_delta_pct | abs ~ '%' if c.ctr_delta_pct is not none else '-' }}</span></td>
-        <td>{{ c.lifecycle | default('-') }}</td>
-        <td class="num">{{ c.spend_prev | round(0) if c.spend_prev else 'new' }}</td>
-        <td class="num">
-          {% if c.spend_delta_pct is not none %}
-            {% if c.spend_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.spend_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ c.spend_delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-        <td class="num">{{ c.results_prev if c.results_prev else '-' }}</td>
-        <td class="num">
-          {% if c.results_delta_pct is not none %}
-            {% if c.results_delta_pct > 0 %}<span class="delta-arrow up">&#9650;</span>{% elif c.results_delta_pct < 0 %}<span class="delta-arrow down">&#9660;</span>{% endif %}
-            {{ c.results_delta_pct | abs }}%
-          {% else %}&mdash;{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  {% if mom.carried_over %}
-  <h3 class="block">Campaigns Carried Over From Previous Month (Still Running)</h3>
-  <p class="small">These older campaigns were active before this month and kept running &mdash; their results are included in the totals above.</p>
-  <table>
-    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th></tr></thead>
-    <tbody>
-      {% for c in mom.carried_over %}
-      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if mom.new_campaigns %}
-  <h3 class="block">New Campaigns This Month</h3>
-  <table>
-    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th></tr></thead>
-    <tbody>
-      {% for c in mom.new_campaigns %}
-      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if mom.stopped_campaigns %}
-  <h3 class="block">Campaigns That Stopped (Previous Month Only)</h3>
-  <table>
-    <thead><tr><th>Campaign</th><th class="num">Last Month Spend</th><th class="num">Last Month Results</th></tr></thead>
-    <tbody>
-      {% for c in mom.stopped_campaigns %}
-      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend | round(0) }}</td><td class="num">{{ c.results }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-</div>
-{% endif %}
-
-<!-- ================= CONVERSION BREAKDOWN ================= -->
-{% if 'conversions' in sections and (conversions | default([])) %}
-<div class="page">
-  <h2 class="section">Conversion Breakdown</h2>
-  <p class="lead muted">Actions tracked by Meta for the reporting period, with counts, cost and cost-per-action.</p>
-  <table>
-    <thead>
-      <tr>
-        <th>Action Type</th>
-        <th class="num">Count</th>
-        <th class="num">Share</th>
-        <th class="num">Cost</th>
-        <th class="num">Cost / Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in conversions %}
-      <tr>
-        <td>{{ c.label }}</td>
-        <td class="num">{{ c.count }}</td>
-        <td class="num">{{ c.pct }}%</td>
-        <td class="num">{{ c.cost_fmt }}</td>
-        <td class="num">{{ c.cpa_fmt }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <h3 class="block">Results by Action</h3>
-  <div class="conv-bars">
-    {% set max_count = (conversions | map(attribute='count') | max) if conversions else 1 %}
-    {% for c in conversions %}
-    <div class="conv-bar-row">
-      <div class="conv-bar-label">{{ c.label }}</div>
-      <div class="conv-bar-track"><div class="conv-bar-fill" style="width: {{ (c.count / max_count * 100) | round(1) }}%"></div></div>
-      <div class="conv-bar-val">{{ c.count }}</div>
-    </div>
+<!-- What to expect -->
+<div class="page contents-page">
+  <img class="ref-mark" src="assets/company/image6.png" alt="Traffic">
+  <h1 class="contents-title">WHAT TO EXPECT:</h1>
+  <div class="contents-grid">
+    {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
+    <div>{{ item }}</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
     {% endfor %}
   </div>
-  <p class="small muted">Cost per action is derived from Meta's cost-per-action-type reporting; when unavailable it falls back to a share of spend.</p>
 </div>
-{% endif %}
 
-<!-- ================= DISTRIBUTION ================= -->
-{% if 'distribution' in sections and (publishers | default([]) or devices | default([]) or countries | default([])) %}
-<div class="page">
-  <h2 class="section">Distribution</h2>
-
-  {% if publishers %}
-  <div class="chart">
-    <div class="chart-title">Spend by Publisher Platform</div>
-    {% for p in publishers %}
-    <div class="hbar-row">
-      <div class="hbar-label">{{ p.label }}</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width: {{ p.bar_width | default(0) }}%"></div></div>
-      <div class="hbar-val">{{ p.spend_fmt }} &middot; {{ p.pct }}% &middot; {{ p.impressions }} imp</div>
-    </div>
-    {% endfor %}
+<!-- Report scope -->
+<div class="page ref-page">
+  {{ nav('REPORT SCOPE') }}
+  <h1 class="ref-title">Report Scope</h1>
+  <div class="ref-hand">Achievements &amp; Challenges</div>
+  <div class="ref-scope">
+    <ul>
+      {% if scope_prose %}<li>{{ scope_prose }}</li>{% elif executive_summary %}<li>{{ executive_summary }}</li>{% endif %}
+      {% if scope_notes %}<li>{{ scope_notes }}</li>{% endif %}
+    </ul>
   </div>
-  {% endif %}
-
-  {% if devices %}
-  <div class="chart">
-    <div class="chart-title">Spend by Device</div>
-    {% for d in devices %}
-    <div class="hbar-row">
-      <div class="hbar-label">{{ d.label }}</div>
-      <div class="hbar-track"><div class="hbar-fill alt" style="width: {{ d.bar_width | default(0) }}%"></div></div>
-      <div class="hbar-val">{{ d.spend_fmt }} &middot; {{ d.pct }}% &middot; CTR {{ d.ctr }}%</div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  {% if countries %}
-  <div class="chart">
-    <div class="chart-title">Spend by Country (Top 10)</div>
-    {% for c in countries %}
-    <div class="hbar-row">
-      <div class="hbar-label">{{ c.label }}</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width: {{ c.bar_width | default(0) }}%"></div></div>
-      <div class="hbar-val">{{ c.spend_fmt }} &middot; {{ c.pct }}% &middot; {{ c.results }} results</div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-  <p class="small muted">Percentages show each bucket's share of total spend. CTR is click-through rate within the bucket.</p>
 </div>
-{% endif %}
 
-<!-- ================= AUDIENCE INSIGHTS ================= -->
-{% if 'audience' in sections and (demographics | default([]) or age_gender | default({}) or dow_pacing | default([]) or hour_pacing | default([])) %}
-<div class="page">
-  <h2 class="section">Audience Insights</h2>
-
-  {% if age_gender %}
-  <h3 class="block">Spend by Age &times; Gender</h3>
-  <table>
-    <thead>
-      <tr><th>Age Group</th><th class="num">Female</th><th class="num">Male</th><th class="num">Total Spend</th></tr>
-    </thead>
-    <tbody>
-      {% for age, cell in age_gender.items() %}
-      <tr><td>{{ age }}</td><td class="num">{{ cell.F }}</td><td class="num">{{ cell.M }}</td><td class="num">{{ cell.total }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if demographics %}
-  <h3 class="block">Top Audience Segments</h3>
-  <table>
-    <thead>
-      <tr><th>Age</th><th>Gender</th><th class="num">Spend</th><th class="num">Share</th><th class="num">Impressions</th><th class="num">Results</th></tr>
-    </thead>
-    <tbody>
-      {% for d in demographics %}
-      <tr><td>{{ d.age }}</td><td>{{ d.gender }}</td><td class="num">{{ d.spend_fmt }}</td><td class="num">{{ d.pct }}%</td><td class="num">{{ d.impressions }}</td><td class="num">{{ d.results }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if dow_pacing %}
-  <div class="two-col">
-    <div class="chart">
-      <div class="chart-title">Spend by Day of Week</div>
-      {% for d in dow_pacing %}
-      <div class="hbar-row">
-        <div class="hbar-label" style="width:80px">{{ d.label }}</div>
-        <div class="hbar-track"><div class="hbar-fill" style="width: {{ d.bar_width | default(0) }}%"></div></div>
-        <div class="hbar-val" style="width:70px">{{ d.spend_fmt }} &middot; {{ d.pct }}%</div>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="chart">
-      <div class="chart-title">Spend by Hour of Day (Audience TZ)</div>
-      {% for h in hour_pacing %}
-      <div class="hbar-row">
-        <div class="hbar-label" style="width:34px">{{ h.label }}h</div>
-        <div class="hbar-track"><div class="hbar-fill alt" style="width: {{ h.bar_width | default(0) }}%"></div></div>
-        <div class="hbar-val" style="width:70px">{{ h.spend_fmt }} &middot; {{ h.pct }}%</div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  <p class="small muted">Pacing uses Meta's hourly stats aggregated by audience time zone (day 0 = Sunday).</p>
-  {% endif %}
-
-  {% if top_adsets %}
-  <h3 class="block">Top Adsets by Spend</h3>
-  <table>
-    <thead>
-      <tr><th>Adset</th><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CPR</th><th class="num">Impressions</th></tr>
-    </thead>
-    <tbody>
-      {% for a in top_adsets %}
-      <tr><td>{{ a.adset_name }}</td><td>{{ a.campaign_name }}</td><td class="num">{{ a.spend_fmt | default(a.spend) }}</td><td class="num">{{ a.results }}</td><td class="num">{{ a.cpr_fmt | default(a.cost_per_result) }}</td><td class="num">{{ a.impressions_fmt | default(a.impressions) }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-</div>
-{% endif %}
-
-<!-- ================= PAGE & INSTAGRAM ================= -->
-{% if 'page_instagram' in sections and (reach | default([]) or messaging | default([]) or content | default([]) or audience | default([])) %}
-<div class="page">
-  <h2 class="section">Page &amp; Instagram</h2>
-
-  {% for platform in reach %}
-  <h3 class="block">Reach &mdash; {{ platform.name }}</h3>
-  <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+<!-- Reach: fixed Facebook and Instagram pages -->
+{% set reach_rows = reach | default([]) %}
+{% for platform_name in ['Facebook', 'Instagram'] %}
+{% set platform = reach_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+<div class="page ref-page">
+  {{ nav('REACH') }}
+  <h1 class="ref-title">Reach</h1>
+  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
+  {% if platform.cards is defined and platform.cards %}
+  <div class="ref-cards">
     {% for card in platform.cards %}
-    <div class="kpi-card"><div class="label">{{ card.label }}</div><div class="value">{{ card.value }}</div></div>
+    <div class="ref-card"><div class="label">{{ card.label }}</div><div class="value">{{ card.value }}</div></div>
     {% endfor %}
   </div>
-  <div class="util-wrap">
-    <div class="util-label">
-      <span>Organic vs Paid views</span>
-      <span><strong>{{ platform.organic_pct }}%</strong> organic &middot; <strong>{{ platform.paid_pct }}%</strong> paid</span>
-    </div>
-    <div class="util-track">
-      <div class="util-fill" style="width: {{ platform.organic_pct }}%; background: var(--brand); border-radius:7px 0 0 7px;"></div>
-    </div>
+  <h3>Organic vs Paid</h3>
+  <div class="util-track"><div class="util-fill" style="width: {{ platform.paid_pct | default(0) }}%"></div></div>
+  <p class="ref-note">Paid {{ platform.paid_pct | default(0) }}% &middot; Organic {{ platform.organic_pct | default(0) }}%</p>
+  {% if platform.followers %}<p class="ref-note">Followers: <strong>{{ platform.followers }}</strong>{% if platform.followers_delta %} (+{{ platform.followers_delta }}){% endif %}</p>{% endif %}
+  {% else %}<p class="ref-note muted">No data available from Meta for this platform and reporting period.</p>{% endif %}
+</div>
+{% endfor %}
+
+<!-- Messaging: fixed Facebook and Instagram pages -->
+{% set messaging_rows = messaging | default([]) %}
+{% for platform_name in ['Facebook', 'Instagram'] %}
+{% set m = messaging_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+<div class="page ref-page">
+  {{ nav('MESSAGING') }}
+  <h1 class="ref-title">Messaging</h1>
+  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
+  <h3>Contacts</h3>
+  <p class="ref-note">People who messaged your business during this reporting period.</p>
+  {% if m.name is defined %}
+  <div class="ref-cards" style="grid-template-columns: repeat(2, 1fr); width: 135mm;">
+    <div class="ref-card"><div class="label">Total Contacts</div><div class="value">{{ m.total_contacts }}</div></div>
+    <div class="ref-card"><div class="label">Messaging Conversations Started</div><div class="value">{{ m.conversations }}</div></div>
   </div>
-  {% if platform.followers %}
-  <p class="small muted">Followers: {{ platform.followers }}{% if platform.followers_delta %} (+{{ platform.followers_delta }} this month){% endif %}</p>
-  {% endif %}
-  {% endfor %}
+  {% else %}<p class="ref-note muted">No data available from Meta for this platform and reporting period.</p>{% endif %}
+</div>
+{% endfor %}
 
-  {% if messaging %}
-  <h3 class="block">Messaging</h3>
+<!-- Content: fixed Facebook and Instagram pages -->
+{% set content_rows = content | default([]) %}
+{% for platform_name in ['Facebook', 'Instagram'] %}
+{% set platform = content_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+<div class="page ref-page">
+  {{ nav('CONTENT') }}
+  <h1 class="ref-title">Content</h1>
+  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
+  <h3>All Content</h3>
+  {% if platform.top is defined and platform.top %}
   <table>
-    <thead><tr><th>Platform</th><th class="num">Total Contacts</th><th class="num">Conversations Started</th></tr></thead>
-    <tbody>
-      {% for m in messaging %}
-      <tr><td>{{ m.name }}</td><td class="num">{{ m.total_contacts }}</td><td class="num">{{ m.conversations }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if content %}
-  {% for platform in content %}
-  <h3 class="block">Top Content &mdash; {{ platform.name }}</h3>
-  <table>
-    <thead><tr><th>Content</th><th>Published</th><th class="num">Views</th><th class="num">Reach</th></tr></thead>
+    <thead><tr><th>Title</th><th>Date Published</th><th class="num">Views</th><th class="num">Reach</th></tr></thead>
     <tbody>
       {% for row in platform.top %}
       <tr><td>{{ row.title }}</td><td>{{ row.date }}</td><td class="num">{{ row.views }}</td><td class="num">{{ row.reach }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
-  {% endfor %}
-  {% endif %}
+  {% else %}<p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — organic content data unavailable.</p>{% endif %}
+</div>
+{% endfor %}
 
-  {% for platform in audience %}
-  <h3 class="block">Audience &mdash; {{ platform.name }}</h3>
-  <p class="small">Followers: <strong>{{ platform.followers }}</strong>{% if platform.followers_delta %} (+{{ platform.followers_delta }} this month){% endif %}</p>
+<!-- Audience: fixed Facebook and Instagram pages -->
+{% set audience_rows = audience | default([]) %}
+{% for platform_name in ['Facebook', 'Instagram'] %}
+{% set platform = audience_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+<div class="page ref-page">
+  {{ nav('AUDIENCE') }}
+  <h1 class="ref-title">Audience</h1>
+  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
+  {% if platform.followers is defined %}
+  <div class="ref-card" style="width:55mm;"><div class="label">Followers</div><div class="value">{{ platform.followers }}</div></div>
   {% if platform.geo %}
-  <table>
-    <thead><tr><th>Country</th><th class="num">Followers</th></tr></thead>
-    <tbody>
-      {% for row in platform.geo %}
-      <tr><td>{{ row.country }}</td><td class="num">{{ row.value }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <h3>Top Countries</h3>
+  <table style="width:120mm"><thead><tr><th>Country</th><th class="num">Followers</th></tr></thead><tbody>
+    {% for row in platform.geo %}<tr><td>{{ row.country }}</td><td class="num">{{ row.value }}</td></tr>{% endfor %}
+  </tbody></table>
   {% endif %}
-  {% endfor %}
+  {% else %}<p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — follower data unavailable.</p>{% endif %}
 </div>
-{% endif %}
+{% endfor %}
 
-<!-- ================= RECOMMENDATIONS ================= -->
-{% if 'recommendations' in sections and (recommendations | default([])) %}
-<div class="page">
-  <h2 class="section">Recommendations &mdash; Priority Actions for Next Month</h2>
-  <div class="rec-box">
-    <strong style="color: var(--accent-dim); text-transform: uppercase; letter-spacing: 1px;">Priority Actions for Next Month</strong>
-    <ol>
-      {% for r in recommendations %}<li>{{ r }}</li>{% endfor %}
-    </ol>
+<!-- Ads: fixed Facebook and Instagram pages -->
+{% set platform_rows = platforms | default([]) %}
+{% for platform_name in ['Facebook', 'Instagram'] %}
+{% set p = platform_rows | selectattr('label', 'equalto', platform_name) | first | default({}) %}
+<div class="page ref-page">
+  {{ nav('ADS') }}
+  <h1 class="ref-title">Ads</h1>
+  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
+  {% if p.label is defined %}
+  <div class="ref-cards">
+    <div class="ref-card"><div class="label">Amount Spent</div><div class="value">{{ p.spend_fmt }}</div></div>
+    <div class="ref-card"><div class="label">Results</div><div class="value">{{ p.results_fmt }}</div></div>
+    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">{{ p.cpr | round(2) }}</div></div>
+    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ p.ctr }}%</div></div>
   </div>
-  {% if manual_recommendations %}
-  <h3 class="block">Account Manager Notes</h3>
-  <ul class="prose" style="padding-left:20px; margin:0;">
-    {% for r in manual_recommendations %}<li>{{ r }}</li>{% endfor %}
-  </ul>
-  {% endif %}
+  <table><thead><tr><th>Platform</th><th class="num">Impressions</th><th class="num">Reach</th><th class="num">Share</th></tr></thead>
+  <tbody><tr><td>{{ platform_name }}</td><td class="num">{{ p.impressions }}</td><td class="num">{{ p.reach }}</td><td class="num">{{ p.share_pct }}%</td></tr></tbody></table>
+  {% else %}<p class="ref-note muted">No advertising data available from Meta for this platform and reporting period.</p>{% endif %}
 </div>
-{% endif %}
+{% endfor %}
 
-<!-- ================= APPENDIX ================= -->
-{% if 'appendix' in sections %}
-<div class="page appendix">
-  <h2 class="section">Appendix</h2>
-
-  <h3 class="block">Methodology</h3>
-  <p class="small">
-    All advertising figures were collected directly from <strong>Meta Ads Manager / Meta Business Suite</strong>
-    through the Meta Marketing API (facebook-business SDK). Campaign and adset performance, conversions,
-    distribution and audience data come from the Ads Insights endpoint at campaign and adset level, attributed with
-    Meta's unified attribution setting for the exact period {{ date_start | default('') }} &mdash; {{ date_stop | default('') }}.
-    Money figures are reported as delivered spend in {{ currency | default('EGP') }}. Results reflect each campaign's optimization goal
-    (leads, messages, purchases, etc.). "Results" equals the account's primary optimization event; cost-per-result is derived from spend divided by results.
-  </p>
-  <p class="small">
-    Distribution and audience breakdowns are campaign-level insights with Meta breakdown dimensions
-    (publisher platform, device platform, country, age/gender, hourly stats by audience time zone).
-    Where a breakdown was unavailable for the account, the section is omitted rather than estimated.
-  </p>
-
-  <h3 class="block">Data Sources</h3>
-  <table>
-    <thead><tr><th>Section</th><th>Source</th></tr></thead>
-    <tbody>
-      <tr><td>Campaign / adset performance, conversions, distribution, audience</td><td>Meta Ads Insights API</td></tr>
-      <tr><td>Page reach, followers, content</td><td>Facebook Page Insights API</td></tr>
-      <tr><td>Instagram reach, followers, content</td><td>Instagram Graph Insights API</td></tr>
-      <tr><td>Budget, VAT, scope notes</td><td>Manual inputs (account manager)</td></tr>
-    </tbody>
-  </table>
-
-  <h3 class="block">Data Quality &amp; Verification</h3>
-  <p class="small">
-    All figures were pulled directly from the Meta Ads Insights API for the exact period
-    {{ date_start | default('') }} &mdash; {{ date_stop | default('') }} (inclusive). Reach and frequency are
-    deduplicated at account and platform level &mdash; they are never summed across campaigns. Spend, results,
-    impressions and clicks are additive and match the Meta Ads Manager totals for the same filters.
-  </p>
-  {% if data_quality %}
-  <ul class="small" style="padding-left:18px;">
-    {% for item in data_quality %}<li>{{ item }}</li>{% endfor %}
-  </ul>
-  {% endif %}
-
-  <h3 class="block">Attribution Note</h3>
-  <p class="small">
-    Attribution is subject to Meta's default attribution windows for each objective. Cross-channel lift or offline
-    conversions are not included. Figures may not sum exactly to totals due to rounding and platform-level deduplication.
-  </p>
-
-  <h3 class="block">Manual Inputs Used</h3>
-  <table>
-    <thead><tr><th>Item</th><th class="num">Value</th></tr></thead>
-    <tbody>
-      <tr><td>Monthly Budget</td><td class="num">{{ budget.amount | default('-') }}</td></tr>
-      <tr><td>Spend (manual)</td><td class="num">{{ budget.spent | default('-') }}</td></tr>
-      <tr><td>VAT</td><td class="num">{{ budget.vat | default('-') }}</td></tr>
-      <tr><td>Remaining</td><td class="num">{{ budget.remaining | default('-') }}</td></tr>
-      {% if revenue is defined and revenue is not none %}<tr><td>Revenue</td><td class="num">{{ revenue_fmt | default('-') }}</td></tr>{% endif %}
-    </tbody>
-  </table>
-
-  {% if manual_insights %}
-  <h3 class="block">Insight Notes</h3>
-  <ul class="small" style="padding-left:18px;">
-    {% for line in manual_insights %}<li>{{ line }}</li>{% endfor %}
-  </ul>
-  {% endif %}
-
-  {% if report_notes %}
-  <h3 class="block">Report Notes</h3>
-  <table>
-    {% for key, value in report_notes.items() %}
-    <tr><td>{{ key | replace('_', ' ') | title }}</td><td>{{ value }}</td></tr>
-    {% endfor %}
-  </table>
-  {% endif %}
-
-  <p class="small muted" style="margin-top:16px">
-    Prepared by Traffic Digital Solutions &middot; Confidential &middot; {{ report_date | default('') }}
-  </p>
+<!-- Budget -->
+<div class="page ref-page">
+  {{ nav('ADS') }}
+  <h1 class="ref-title">Ads</h1>
+  <div class="ref-hand">Budget &amp; Spend Overview</div>
+  <div class="budget-grid">
+    <div class="budget-row"><span>Budget</span><strong>{{ budget.amount | default('-') }}</strong></div>
+    <div class="budget-row"><span>Spent</span><strong>{{ budget.spent | default('-') }}</strong></div>
+    <div class="budget-row"><span>VAT</span><strong>{{ budget.vat | default('-') }}</strong></div>
+    <div class="budget-row"><span>Remaining</span><strong>{{ budget.remaining | default('-') }}</strong></div>
+  </div>
 </div>
-{% endif %}
+
+<!-- Insights -->
+<div class="page ref-page">
+  {{ nav('INSIGHTS') }}
+  <h1 class="ref-title">Insights</h1>
+  <ul class="insight-list">
+    {% for item in anomalies | default([]) %}<li>{{ item }}</li>{% endfor %}
+    {% for item in recommendations | default([]) %}<li>{{ item }}</li>{% endfor %}
+    {% for item in manual_recommendations | default([]) %}<li>{{ item }}</li>{% endfor %}
+  </ul>
+</div>
+
+<!-- Thank you -->
+<div class="page contents-page">
+  <div class="cover-brand">Traffic</div>
+  <div class="thank-title">THANK<br>YOU</div>
+  <div style="margin-top:30mm; font-size:18pt;">Client Name: {{ client.name | default('Client') }}<br>Date: {{ report_date | default('') }}</div>
+</div>
 
 </body>
 </html>

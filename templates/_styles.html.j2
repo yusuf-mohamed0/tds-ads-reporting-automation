@@ -1,43 +1,87 @@
 <style>
+  @font-face {
+    font-family: 'Proxima Nova';
+    src: url('assets/fonts/ProximaNova-Regular.otf') format('opentype');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'Proxima Nova';
+    src: url('assets/fonts/Proxima Nova Semibold.otf') format('opentype');
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: 'Proxima Nova';
+    src: url('assets/fonts/Proxima Nova Bold.otf') format('opentype');
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: 'Proxima Nova';
+    src: url('assets/fonts/Proxima Nova Black.otf') format('opentype');
+    font-weight: 900;
+  }
+  @font-face {
+    font-family: 'Reenie Beanie';
+    src: url('assets/fonts/ReenieBeanie-Regular.ttf') format('truetype');
+  }
+  @font-face {
+    font-family: 'Alexandria';
+    src: url('assets/fonts/Alexandria-Regular.ttf') format('truetype');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'Alexandria';
+    src: url('assets/fonts/Alexandria-Bold.ttf') format('truetype');
+    font-weight: 700;
+  }
   @page {
-    size: A4;
-    margin: 16mm 14mm 16mm 14mm;
+    size: 10in 7.5in;
+    margin: 15mm 12mm 14mm 12mm;
     @bottom-left {
-      content: "Traffic Digital Solutions";
-      font-size: 8pt; color: #222124;
+      content: "TRAFFIC";
+      font-family: 'Proxima Nova';
+      font-size: 8pt; color: #171414;
     }
     @bottom-center {
-      content: "Media Buying Performance Report";
-      font-size: 8pt; color: #222124;
+      content: "";
+      font-family: 'Proxima Nova';
+      border-top: 1px solid #231F20;
     }
     @bottom-right {
       content: counter(page);
-      font-size: 8pt; color: #222124;
+      font-family: 'Proxima Nova';
+      font-size: 8pt; color: #747474;
     }
   }
+  @page:first {
+    margin: 0;
+    background: #171414;
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; border: 0; }
+    @bottom-right { content: ""; }
+  }
   :root {
-    --brand: #09060B;
-    --brand-soft: #222124;
-    --accent: #B93CFC;
-    --accent-dim: #8109F5;
-    --ink: #09060B;
-    --muted: #222124;
-    --line: #D8CEE0;
-    --bg-soft: #F3EBF5;
-    --ok: #8109F5;
-    --bad: #B93CFC;
-    --warn: #222124;
+    --brand: #171414;
+    --brand-soft: #231F20;
+    --accent: #FCB900;
+    --accent-dim: #DFA629;
+    --ink: #171414;
+    --muted: #747474;
+    --line: #E9E9E9;
+    --bg-soft: #F5F5F5;
+    --ok: #087F5B;
+    --bad: #B42318;
+    --warn: #DFA629;
   }
   * { box-sizing: border-box; }
   body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', sans-serif;
+    font-family: 'Proxima Nova';
     color: var(--ink); margin: 0; font-size: 10pt; line-height: 1.45;
   }
   .page { page-break-after: always; }
   .page:last-child { page-break-after: auto; }
 
   /* ---------- Cover ---------- */
-  .cover { display: flex; flex-direction: column; justify-content: space-between; height: 250mm; }
+  .cover { display: flex; flex-direction: column; justify-content: space-between; height: 161mm; }
   .cover-head { display: flex; justify-content: space-between; align-items: center; }
   .cover-brand { color: var(--brand); font-weight: 800; letter-spacing: 2px; font-size: 11pt; }
   .cover-mark {
@@ -164,4 +208,130 @@
   .badge.top { background: var(--ok); }
   .badge.bottom { background: var(--bad); }
   .delta-arrow { font-weight: 700; }
+
+  /* Official TRAFFIC report template. Keep this layer aligned with the
+     immutable source files in assets/company-report-template/. */
+  body { background: #FFFFFF; }
+  .page { position: relative; min-height: 160mm; padding-top: 8mm; }
+  .page:not(.cover-page)::before {
+    content: "";
+    position: absolute; top: 0; left: 0;
+    width: 25mm; height: 9mm;
+    background: url("assets/company/image8.png") left top / contain no-repeat;
+  }
+  .page:not(.cover-page) > h2.section::before {
+    content: "REPORT SCOPE     REACH     MESSAGING     CONTENT     AUDIENCE     ADS     INSIGHTS";
+    display: block;
+    margin: -5mm 0 7mm 28mm;
+    color: #747474;
+    font-size: 8.2pt;
+    font-weight: 400;
+    letter-spacing: .2px;
+    white-space: pre;
+  }
+  .page:not(.cover-page) > h2.section {
+    border: 0;
+    padding: 0;
+    margin: 0 0 5mm 0;
+    color: #171414;
+    font-size: 24pt;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -.5px;
+  }
+  .page:not(.cover-page) > h2.section::after {
+    content: "";
+    display: inline-block;
+    width: 11mm;
+    height: 3px;
+    margin-left: 3mm;
+    vertical-align: middle;
+    background: #FCB900;
+  }
+
+  .cover-page {
+    margin: 0;
+    padding: 0;
+    width: 254mm;
+    height: 190.5mm;
+    min-height: 0;
+    overflow: hidden;
+    background: #171414 url("assets/company/image2.png") center / cover no-repeat;
+    color: #FFFFFF;
+  }
+  .cover-page .cover { height: 190.5mm; padding: 13mm 15mm 12mm 15mm; }
+  .cover-head { align-items: flex-start; }
+  .cover-brand {
+    color: #FFFFFF;
+    font-size: 27pt;
+    font-weight: 900;
+    letter-spacing: -2px;
+    text-transform: none;
+  }
+  .cover-brand::after { content: "."; color: #FCB900; }
+  .cover-mark { display: none; }
+  .cover-kicker {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #FFFFFF;
+    font-size: 28pt;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+  .cover-title { color: #FFFFFF; font-size: 20pt; font-weight: 500; margin-top: 12mm !important; }
+  .cover-sub { color: #FFFFFF; font-size: 13pt; }
+  .cover-rule { width: 42mm; height: 2px; border-radius: 0; background: #FCB900; }
+  .cover-meta div, .cover-meta .muted { color: #FFFFFF; }
+  .cover-foot { border-color: #FCB900; color: #E9E9E9; }
+
+  h3.block { color: #171414; font-size: 12pt; text-transform: uppercase; }
+  .lead { color: #231F20; }
+  .kpi-card, .strip-box, .client-block {
+    border: 1px solid #E1E1E1;
+    border-radius: 0;
+    background: #FFFFFF;
+  }
+  .kpi-card { border-top: 3px solid #FCB900; }
+  .kpi-grid { gap: 6px; }
+  .kpi-card { padding: 4px 7px; }
+  .kpi-card .value { font-size: 13pt; }
+  .kpi-card .value, .strip-box .value { color: #171414; }
+  table { border-top: 1px solid #D8D8D8; }
+  th {
+    background: #FFFFFF;
+    color: #231F20;
+    border-bottom: 1px solid #D8D8D8;
+    font-weight: 700;
+  }
+  td { border-bottom-color: #E1E1E1; }
+  tr:nth-child(even) td { background: #F0F0F0; }
+  .row-top td { background: #FFF7DB; border-left-color: #FCB900; }
+  .row-bottom td { background: #F5F5F5; border-left-color: #747474; }
+  .share-track, .hbar-track, .conv-bar-track, .util-track { background: #E9E9E9; }
+  .share-fill, .hbar-fill, .util-fill { background: #FCB900; }
+  .hbar-fill.alt, .conv-bar-fill { background: #231F20; }
+  .exec-box {
+    border-radius: 0;
+    border-left: 5px solid #FCB900;
+    background: #171414;
+  }
+  .exec-box { padding: 9px 12px; margin-bottom: 7px; }
+  .exec-box p { font-size: 9pt; line-height: 1.5; }
+  h3.block { margin-top: 10px; margin-bottom: 4px; }
+  .exec-box h3 { color: #FCB900; }
+  .rec-box, .anomaly-box, .prose {
+    border: 1px solid #E1E1E1;
+    border-left: 4px solid #FCB900;
+    border-radius: 0;
+    background: #FFFFFF;
+  }
+  .anomaly-box li { color: #231F20; }
+  .badge, .badge.top { background: #171414; }
+  .badge.bottom { background: #747474; }
+  .toc-line { border-color: #D8D8D8; }
+  .toc-num { color: #DFA629; }
 </style>

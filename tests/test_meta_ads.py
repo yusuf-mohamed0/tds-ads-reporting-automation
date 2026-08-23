@@ -17,8 +17,8 @@ from tds_ads_reporting.meta.ads import (
 
 class TestUtils(unittest.TestCase):
     def test_month_range(self):
-        self.assertEqual(month_range("2026-03"), ("2026-03-01", "2026-04-01"))
-        self.assertEqual(month_range("2026-12"), ("2026-12-01", "2027-01-01"))
+        self.assertEqual(month_range("2026-03"), ("2026-03-01", "2026-03-31"))
+        self.assertEqual(month_range("2026-12"), ("2026-12-01", "2026-12-31"))
 
     def test_parse(self):
         self.assertEqual(parse_float("42.5"), 42.5)
@@ -100,7 +100,7 @@ class TestFetchCampaignInsights(unittest.TestCase):
         mock_adaccount_cls.assert_called_once_with("act_123456789")
         call_kwargs = mock_account.get_insights.call_args[1]
         self.assertEqual(call_kwargs["params"]["level"], "campaign")
-        self.assertEqual(call_kwargs["params"]["time_range"], {"since": "2026-03-01", "until": "2026-04-01"})
+        self.assertEqual(call_kwargs["params"]["time_range"], {"since": "2026-03-01", "until": "2026-03-31"})
 
 
 class TestFetchMetaDataset(unittest.TestCase):

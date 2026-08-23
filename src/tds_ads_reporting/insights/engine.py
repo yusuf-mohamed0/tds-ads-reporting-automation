@@ -107,6 +107,26 @@ def campaign_lifecycle(c: CampaignRow, month: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _platform_result_count(label: str, actions: dict[str, dict]) -> int:
+    """Return the action count that corresponds to the report's result label."""
+    needles = {
+        "Messages": ("messaging_conversation_started", "onsite_conversation_started"),
+        "Post Engagements": ("post_engagement",),
+        "Post Reactions": ("post_reaction",),
+        "Link Clicks": ("link_click",),
+        "Video Views": ("video_view",),
+        "Leads": ("lead", "leadgen"),
+        "Purchases": ("purchase",),
+        "Conversions (Purchases)": ("purchase",),
+        "App Installs": ("app_install", "mobile_app_install"),
+    }.get(label, ())
+    for needle in needles:
+        matches = [int(value.get("count") or 0) for action, value in actions.items() if needle in action.lower()]
+        if matches:
+            return max(matches)
+    return 0
+
+
 def generate_insights(
     dataset: MetaAdsDataset,
     manual: ManualInputs,
@@ -130,6 +150,12 @@ def generate_insights(
     campaigns = list(dataset.campaigns)
     for c in campaigns:
         c.lifecycle = campaign_lifecycle(c, dataset.month)
+
+    result_labels: dict[str, int] = {}
+    for campaign in campaigns:
+        if campaign.results > 0:
+            result_labels[campaign.results_label] = result_labels.get(campaign.results_label, 0) + campaign.results
+    account_results_label = max(result_labels, key=result_labels.get) if result_labels else "Results"
 
     # ---- platform split (Facebook vs Instagram) ---------------------------
     platform_rows: list[dict[str, Any]] = []
@@ -166,6 +192,11 @@ def generate_insights(
         platform_conv = (dataset.platform_conversions or {}).get(platform_key) or {}
         row["conversions_total"] = int(platform_conv.get("total") or 0)
         row["conversions"] = platform_conv.get("actions") or {}
+        matched_results = _platform_result_count(account_results_label, row["conversions"])
+        if matched_results:
+            row["results"] = matched_results
+            row["results_fmt"] = _fmt_num(matched_results)
+            row["cpr"] = round(row["spend"] / matched_results, 2)
         platform_rows.append(row)
 
     # ---- budget / revenue -------------------------------------------------

@@ -499,11 +499,50 @@ def build_context(
     platform_rows = insights_payload.get("platforms") or []
     data_quality = insights_payload.get("data_quality") or []
 
+    # Ads Insights is still available when the token lacks Page/Instagram
+    # permissions. Use those exact paid metrics rather than emitting empty
+    # Reach or Messaging pages.
+    results_label = insights_payload.get("results_label") or "Results"
+    for platform in platform_rows:
+        name = platform.get("label")
+        if name not in {"Facebook", "Instagram"}:
+            continue
+        if not any(row.get("name") == name for row in reach):
+            reach.append(
+                {
+                    "name": name,
+                    "cards": [
+                        {"label": "Paid Impressions", "value": _fmt_num(platform.get("impressions", 0))},
+                        {"label": "Paid Reach", "value": _fmt_num(platform.get("reach", 0))},
+                        {"label": results_label, "value": _fmt_num(platform.get("results", 0))},
+                    ],
+                    "organic_pct": 0,
+                    "paid_pct": 100,
+                }
+            )
+        if results_label == "Messages" and not any(row.get("name") == name for row in messaging):
+            messages = int(platform.get("results") or 0)
+            messaging.append(
+                {
+                    "name": name,
+                    "total_contacts": _fmt_num(messages),
+                    "conversations": _fmt_num(messages),
+                    "organic": "0",
+                    "paid": _fmt_num(messages),
+                    "organic_pct": 0,
+                    "paid_pct": 100,
+                }
+            )
+
+    budget_amount = float(manual.budget.get("amount") or 0)
+    budget_spent = float(manual.budget.get("spent") or kpis.get("spend") or 0)
+    budget_vat = float(manual.budget.get("vat") or 0)
+    budget_remaining = float(manual.budget.get("remaining") or 0)
     budget = {
-        "amount": _fmt_money(manual.budget.get("amount", 0), currency),
-        "spent": _fmt_money(manual.budget.get("spent", 0), currency),
-        "vat": _fmt_money(manual.budget.get("vat", 0), currency),
-        "remaining": _fmt_money(manual.budget.get("remaining", 0), currency),
+        "amount": _fmt_money(budget_amount, currency) if budget_amount else "Not provided",
+        "spent": _fmt_money(budget_spent, currency),
+        "vat": _fmt_money(budget_vat, currency) if budget_vat else "Not provided",
+        "remaining": _fmt_money(budget_remaining, currency) if budget_amount else "Not provided",
     }
 
     prev_month_label = insights_payload.get("prev_month_label")
@@ -564,7 +603,7 @@ def build_context(
         "mom": mom,
         "platforms": platform_rows,
         "data_quality": data_quality,
-        "results_label": insights_payload.get("results_label") or "Results",
+        "results_label": results_label,
         "ai": insights_payload.get("ai"),
         "prev_month_label": prev_month_label,
         "has_meta": dataset is not None,
