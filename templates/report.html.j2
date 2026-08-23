@@ -220,8 +220,8 @@
   <div class="ref-cards">
     <div class="ref-card"><div class="label">Amount Spent</div><div class="value">{{ p.spend_fmt }}</div></div>
     <div class="ref-card"><div class="label">Results</div><div class="value">{{ p.results_fmt }}</div></div>
-    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">{{ p.cpr | round(2) }}</div></div>
-    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ p.ctr }}%</div></div>
+    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">{{ p.cpr_fmt | default('-') }}</div></div>
+    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ p.ctr | default(0) }}%</div></div>
   </div>
   <table><thead><tr><th>Platform</th><th class="num">Impressions</th><th class="num">Reach</th><th class="num">Share</th></tr></thead>
   <tbody><tr><td>{{ platform_name }}</td><td class="num">{{ p.impressions }}</td><td class="num">{{ p.reach }}</td><td class="num">{{ p.share_pct }}%</td></tr></tbody></table>

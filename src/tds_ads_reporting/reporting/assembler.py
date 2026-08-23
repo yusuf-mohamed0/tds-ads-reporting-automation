@@ -148,11 +148,11 @@ def _campaign_table_rows(
     dataset: MetaAdsDataset, currency: str, prev_campaigns: dict[str, dict]
 ) -> list[dict[str, Any]]:
     total_spend = dataset.total_spend
-    total_results = dataset.total_results or 1
+    total_results = dataset.total_results
     rows = []
     for c in dataset.campaigns:
         spend_share = round(c.spend / total_spend * 100, 1) if total_spend else 0.0
-        cpr = c.cost_per_result or (round(c.spend / c.results, 2) if c.results else 0.0)
+        cpr = c.cost_per_result or (round(c.spend / c.results, 2) if c.results else None)
         prev_spend = float(prev_campaigns.get(c.campaign_id, {}).get("spend") or 0.0)
         mom_spend_delta_pct = round((c.spend - prev_spend) / prev_spend * 100, 1) if prev_spend else None
         rows.append(
@@ -169,7 +169,7 @@ def _campaign_table_rows(
                 "spend_fmt": f"{c.spend:,.0f}",
                 "results": c.results,
                 "cpr": cpr,
-                "cpr_fmt": f"{cpr:,.0f}",
+                "cpr_fmt": f"{cpr:,.0f}" if cpr is not None else "-",
                 "ctr": c.ctr,
                 "cpc": c.cpc,
                 "cpm": c.cpm,
@@ -179,7 +179,7 @@ def _campaign_table_rows(
                 "clicks": c.clicks,
                 "share_pct": spend_share,
                 "bar_width": max(spend_share, 2.0) if spend_share else 0.0,
-                "results_pct": round(c.results / total_results * 100, 1),
+                "results_pct": round(c.results / total_results * 100, 1) if total_results else 0.0,
                 "mom_spend_delta_pct": mom_spend_delta_pct,
             }
         )
@@ -188,7 +188,7 @@ def _campaign_table_rows(
 
 
 def _conversion_rows(conversions: dict[str, dict], currency: str) -> list[dict[str, Any]]:
-    total = sum(v.get("count", 0) for v in conversions.values()) or 1
+    total = sum(v.get("count", 0) for v in conversions.values())
     rows = [
         {
             "action_type": at,
@@ -198,7 +198,7 @@ def _conversion_rows(conversions: dict[str, dict], currency: str) -> list[dict[s
             "cost_fmt": _fmt_money(v.get("cost", 0.0), currency),
             "cpa": float(v.get("cpa", 0.0)),
             "cpa_fmt": _fmt_money(v.get("cpa", 0.0), currency),
-            "pct": round(v.get("count", 0) / total * 100, 1),
+            "pct": round(v.get("count", 0) / total * 100, 1) if total else 0.0,
         }
         for at, v in conversions.items()
     ]
@@ -347,9 +347,9 @@ def build_context(
                 "name": "Facebook",
                 "total_contacts": _fmt_num(data.page.new_conversations),
                 "conversations": _fmt_num(data.page.new_conversations),
-                "organic": _fmt_num(data.page.new_conversations),
-                "paid": "0",
-                "organic_pct": 100,
+                "organic": "",
+                "paid": "",
+                "organic_pct": 0,
                 "paid_pct": 0,
             }
         )
@@ -389,11 +389,11 @@ def build_context(
                     {"label": "Views", "value": _fmt_num(ig.views)},
                     {"label": "Accounts Engaged", "value": _fmt_num(ig.accounts_engaged)},
                 ],
-                "organic_pct": 100,
+                "organic_pct": 0,
                 "paid_pct": 0,
                 "total": _fmt_num(ig.reach),
-                "organic": _fmt_num(ig.reach),
-                "paid": "0",
+                "organic": "",
+                "paid": "",
                 "followers": _fmt_num(ig.followers_count),
             }
         )
@@ -528,13 +528,15 @@ def build_context(
                     ctr = float(pub.get("ctr", 0.0))
                     cpc = round(spend / clicks, 2) if clicks else 0.0
                     cpm = round(spend / impressions * 1000, 2) if impressions else 0.0
-                    cpr = round(spend / results, 2) if results else 0.0
+                    cpr = round(spend / results, 2) if results else None
                     pct = float(pub.get("pct", 0.0))
                     freq = round(impressions / pub_reach, 2) if pub_reach else 0.0
+                    cpr_fmt = _fmt_money(cpr, currency) if cpr is not None else "-"
                     dataset.platforms[label] = {
                         "platform": label, "spend": spend, "results": results,
                         "impressions": impressions, "reach": pub_reach, "clicks": clicks,
-                        "ctr": ctr, "cpc": cpc, "cpm": cpm, "cpr": cpr, "pct": pct, "frequency": freq,
+                        "ctr": ctr, "cpc": cpc, "cpm": cpm, "cpr": cpr, "cpr_fmt": cpr_fmt, "pct": pct, "frequency": freq,
+                        "spend_fmt": _fmt_money(spend, currency), "results_fmt": _fmt_num(results),
                     }
 
         try:
@@ -625,12 +627,14 @@ def build_context(
             )
 
     budget_amount = float(manual.budget.get("amount") or 0)
-    budget_spent = float(manual.budget.get("spent") or kpis.get("spend") or 0)
+    budget_spent = float(manual.budget.get("spent") or 0)
+    if not budget_spent and kpis.get("spend"):
+        budget_spent = float(kpis["spend"])
     budget_vat = float(manual.budget.get("vat") or 0)
     budget_remaining = float(manual.budget.get("remaining") or 0)
     budget = {
         "amount": _fmt_money(budget_amount, currency) if budget_amount else "Not provided",
-        "spent": _fmt_money(budget_spent, currency),
+        "spent": _fmt_money(budget_spent, currency) if budget_spent else "Not provided",
         "vat": _fmt_money(budget_vat, currency) if budget_vat else "Not provided",
         "remaining": _fmt_money(budget_remaining, currency) if budget_amount else "Not provided",
     }

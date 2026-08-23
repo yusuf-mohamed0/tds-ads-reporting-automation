@@ -52,13 +52,13 @@
   <div class="ref-head"><img class="ref-mark" src="assets/company/image8.png" alt="Traffic"><div class="ref-nav"><span class="active">PORTFOLIO</span><span>ADS</span><span>INSIGHTS</span></div></div>
   <h1 class="ref-title">Portfolio Summary</h1>
   <div class="ref-cards">
-    <div class="ref-card"><div class="label">Total Spend</div><div class="value">{{ t.spend_fmt | default('0') }}</div></div>
-    <div class="ref-card"><div class="label">Total Results</div><div class="value">{{ t.results_fmt | default('0') }}</div></div>
-    <div class="ref-card"><div class="label">Impressions</div><div class="value">{{ t.impressions_fmt | default('0') }}</div></div>
-    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ t.ctr | default(0) }}%</div></div>
+    <div class="ref-card"><div class="label">Total Spend</div><div class="value">{{ t.spend_fmt | default('-') }}</div></div>
+    <div class="ref-card"><div class="label">Total Results</div><div class="value">{{ t.results_fmt | default('-') }}</div></div>
+    <div class="ref-card"><div class="label">Impressions</div><div class="value">{{ t.impressions_fmt | default('-') }}</div></div>
+    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ t.ctr | default('-') }}%</div></div>
   </div>
   <table><thead><tr><th>Client</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CTR</th><th class="num">CPR</th></tr></thead><tbody>
-  {% for c in clients %}<tr><td>{{ c.name | default(c.client_id) }}</td><td class="num">{{ c.kpis.spend_fmt | default('0') }}</td><td class="num">{{ c.kpis.results_fmt | default('0') }}</td><td class="num">{{ c.kpis.ctr | default(0) }}%</td><td class="num">{{ c.kpis.cpr_fmt | default('0') }}</td></tr>{% endfor %}
+  {% for c in clients %}{% if c.kpis %}<tr><td>{{ c.name | default(c.client_id) }}</td><td class="num">{{ c.kpis.spend_fmt | default('-') }}</td><td class="num">{{ c.kpis.results_fmt | default('-') }}</td><td class="num">{{ c.kpis.ctr | default('-') }}%</td><td class="num">{{ c.kpis.cpr_fmt | default('-') }}</td></tr>{% endif %}{% endfor %}
   </tbody></table>
 </div>
 
@@ -66,7 +66,7 @@
   <div class="ref-head"><img class="ref-mark" src="assets/company/image8.png" alt="Traffic"><div class="ref-nav"><span>PORTFOLIO</span><span class="active">ADS</span><span>INSIGHTS</span></div></div>
   <h1 class="ref-title">Ads</h1>
   <table><thead><tr><th>Client</th><th class="num">Budget Util.</th><th class="num">Impressions</th><th class="num">Results</th></tr></thead><tbody>
-  {% for c in clients %}<tr><td>{{ c.name | default(c.client_id) }}</td><td class="num">{{ c.kpis.budget_utilization | default(0) }}%</td><td class="num">{{ c.kpis.impressions_fmt | default('0') }}</td><td class="num">{{ c.kpis.results_fmt | default('0') }}</td></tr>{% endfor %}
+  {% for c in clients %}{% if c.kpis %}<tr><td>{{ c.name | default(c.client_id) }}</td><td class="num">{{ c.kpis.budget_utilization | default('-') }}%</td><td class="num">{{ c.kpis.impressions_fmt | default('-') }}</td><td class="num">{{ c.kpis.results_fmt | default('-') }}</td></tr>{% endif %}{% endfor %}
   </tbody></table>
 </div>
 
