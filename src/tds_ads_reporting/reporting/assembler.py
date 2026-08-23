@@ -514,6 +514,29 @@ def build_context(
             }
         ads_summary = dataset
 
+        # If dataset.platforms is None (older cache), build from publishers breakdown
+        if not dataset.platforms and dataset.publishers:
+            dataset.platforms = {}
+            for pub in dataset.publishers:
+                label = str(pub.get("label", "")).lower()
+                if label in ("facebook", "instagram", "messenger", "audience_network"):
+                    spend = float(pub.get("spend", 0.0))
+                    results = int(pub.get("results", 0))
+                    impressions = int(pub.get("impressions", 0))
+                    pub_reach = int(pub.get("reach", 0))
+                    clicks = int(pub.get("clicks", 0))
+                    ctr = float(pub.get("ctr", 0.0))
+                    cpc = round(spend / clicks, 2) if clicks else 0.0
+                    cpm = round(spend / impressions * 1000, 2) if impressions else 0.0
+                    cpr = round(spend / results, 2) if results else 0.0
+                    pct = float(pub.get("pct", 0.0))
+                    freq = round(impressions / pub_reach, 2) if pub_reach else 0.0
+                    dataset.platforms[label] = {
+                        "platform": label, "spend": spend, "results": results,
+                        "impressions": impressions, "reach": pub_reach, "clicks": clicks,
+                        "ctr": ctr, "cpc": cpc, "cpm": cpm, "cpr": cpr, "pct": pct, "frequency": freq,
+                    }
+
         try:
             insights_payload = generate_insights(dataset, manual, client, currency)
         except Exception as exc:  # noqa: BLE001
@@ -657,6 +680,7 @@ def build_context(
         "bottom_campaigns": insights_payload.get("bottom_campaigns") or [],
         "anomalies": insights_payload.get("anomalies") or [],
         "campaigns": campaign_rows,
+        "active_campaigns": [c for c in campaign_rows if c.get("spend", 0) > 0],
         "conversions": conversion_rows,
         "devices": device_rows,
         "publishers": publisher_rows,

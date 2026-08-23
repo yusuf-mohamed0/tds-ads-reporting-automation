@@ -96,7 +96,7 @@
   </div>
 </div>
 
-<!-- Reach: fixed Facebook and Instagram pages -->
+<!-- Reach: fixed Facebook and Instagram pages — shows paid metrics from Ads Insights when Page API unavailable -->
 {% set reach_rows = reach | default([]) %}
 {% for platform_name in ['Facebook', 'Instagram'] %}
 {% set platform = reach_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
@@ -110,9 +110,11 @@
     <div class="ref-card"><div class="label">{{ card.label }}</div><div class="value">{{ card.value }}</div></div>
     {% endfor %}
   </div>
+  {% if platform.paid_pct or platform.organic_pct %}
   <h3>Organic vs Paid</h3>
   <div class="util-track"><div class="util-fill" style="width: {{ platform.paid_pct | default(0) }}%"></div></div>
   <p class="ref-note">Paid {{ platform.paid_pct | default(0) }}% &middot; Organic {{ platform.organic_pct | default(0) }}%</p>
+  {% endif %}
   {% if platform.followers %}<p class="ref-note">Followers: <strong>{{ platform.followers }}</strong>{% if platform.followers_delta %} (+{{ platform.followers_delta }}){% endif %}</p>{% endif %}
   {% else %}<p class="ref-note muted">No data available from Meta for this platform and reporting period.</p>{% endif %}
 </div>
@@ -137,16 +139,17 @@
 </div>
 {% endfor %}
 
-<!-- Content: fixed Facebook and Instagram pages -->
+<!-- Content: fixed Facebook and Instagram pages — shows top campaigns when organic posts unavailable -->
 {% set content_rows = content | default([]) %}
+{% set campaign_list = active_campaigns | default([]) %}
 {% for platform_name in ['Facebook', 'Instagram'] %}
 {% set platform = content_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
 <div class="page ref-page">
   {{ nav('CONTENT') }}
   <h1 class="ref-title">Content</h1>
   <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  <h3>All Content</h3>
   {% if platform.top is defined and platform.top %}
+  <h3>Top Content</h3>
   <table>
     <thead><tr><th>Title</th><th>Date Published</th><th class="num">Views</th><th class="num">Reach</th></tr></thead>
     <tbody>
@@ -155,7 +158,18 @@
       {% endfor %}
     </tbody>
   </table>
-  {% else %}<p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — organic content data unavailable.</p>{% endif %}
+  {% elif campaign_list %}
+  <h3>Top Campaign Performance</h3>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CTR</th></tr></thead>
+    <tbody>
+      {% for c in campaign_list[:8] %}
+      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend_fmt }}</td><td class="num">{{ c.results }}</td><td class="num">{{ c.ctr }}%</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="ref-note muted">Organic content data unavailable — showing top ad campaign performance instead.</p>
+  {% else %}<p class="ref-note muted">No content data available from Meta for this platform and reporting period.</p>{% endif %}
 </div>
 {% endfor %}
 
