@@ -1,0 +1,35 @@
+# Alamein Outdoor Furniture — manual inputs for July 2026
+# Fill ONLY what you know from Meta Business Suite screenshots; leave the rest.
+client_id: alamein-2022
+month: "2026-07"
+
+budget:
+  amount:          # total agreed monthly budget, e.g. 63600
+
+spend:
+  amount:          # actual spend if different from API
+  vat:
+  remaining:
+
+organic:
+  facebook:
+    reach_cards:               # e.g. [{label: Views, value: 12,345}, {label: From Organic, value: 8,000}, {label: From Ads, value: 4,345}]
+    organic_pct:               # 0-100
+    followers:
+    messaging_contacts:
+    conversations_started:
+    content_rows:              # e.g. [{title: Post name, date: 2026-07-14, views: 1200, reach: 900}]
+    geo:                       # e.g. [{country: Egypt, value: 5400}]
+  instagram:
+    reach_cards:
+    organic_pct:
+    followers:
+    messaging_contacts:
+    conversations_started:
+    content_rows:
+    geo:
+
+scope_prose: |
+scope_notes: |
+insights: []
+recommendations: []

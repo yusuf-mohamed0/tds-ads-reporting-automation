@@ -413,6 +413,65 @@ def build_context(
                 }
             )
 
+    # ---- Manually supplied organic numbers (Business Suite screenshots) ----
+    # Mirrors the historical March workflow: the account manager types the
+    # monthly organic values into manual_inputs/<client>_<month>.yaml and the
+    # report renders them on the reference pages. API data always wins when
+    # present; manual values only fill platforms Meta could not serve.
+    for platform_name in ("Facebook", "Instagram"):
+        entry = (manual.organic or {}).get(platform_name.lower()) or {}
+        if not entry:
+            continue
+        if entry.get("reach_cards") and not any(row.get("name") == platform_name for row in reach):
+            reach.append(
+                {
+                    "name": platform_name,
+                    "cards": [
+                        {"label": str(c.get("label", "")), "value": str(c.get("value", ""))}
+                        for c in entry["reach_cards"]
+                    ],
+                    "organic_pct": int(entry.get("organic_pct") or 0),
+                    "paid_pct": 100 - int(entry.get("organic_pct") or 0),
+                    "followers": _fmt_num(entry.get("followers") or 0) if entry.get("followers") is not None else "",
+                }
+            )
+        if entry.get("messaging_contacts") is not None and not any(row.get("name") == platform_name for row in messaging):
+            messaging.append(
+                {
+                    "name": platform_name,
+                    "total_contacts": _fmt_num(entry["messaging_contacts"]),
+                    "conversations": _fmt_num(entry.get("conversations_started") or entry["messaging_contacts"]),
+                    "organic_pct": int(entry.get("organic_pct") or 0),
+                    "paid_pct": 100 - int(entry.get("organic_pct") or 0),
+                }
+            )
+        if entry.get("content_rows") and not any(row.get("name") == platform_name for row in content):
+            content.append(
+                {
+                    "name": platform_name,
+                    "top": [
+                        {
+                            "title": str(r.get("title", "")),
+                            "date": str(r.get("date", "")),
+                            "views": _fmt_num(r.get("views") or 0),
+                            "reach": _fmt_num(r.get("reach") or 0),
+                        }
+                        for r in entry["content_rows"][:10]
+                    ],
+                }
+            )
+        if entry.get("followers") is not None and not any(row.get("name") == platform_name for row in audience):
+            audience.append(
+                {
+                    "name": platform_name,
+                    "followers": _fmt_num(entry["followers"]),
+                    "geo": [
+                        {"country": str(g.get("country", "")), "value": _fmt_num(g.get("value") or 0)}
+                        for g in entry.get("geo") or []
+                    ],
+                }
+            )
+
     # ---- Meta ads dataset + insights engine --------------------------------
     dataset: MetaAdsDataset | None = None
     insights_payload: dict[str, Any] = {}

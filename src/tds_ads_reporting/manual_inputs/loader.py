@@ -20,6 +20,7 @@ class ManualInputs:
     insights: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
     revenue: float | None = None
+    organic: dict[str, Any] = field(default_factory=dict)
     raw: dict[str, Any] = field(default_factory=dict)
 
 
@@ -62,5 +63,6 @@ def load_manual_inputs(client_id: str, month: str) -> ManualInputs:
         insights=raw.get("insights", []),
         recommendations=raw.get("recommendations", []),
         revenue=budget.get("revenue"),
+        organic=raw.get("organic") or {},
         raw=raw,
     )
