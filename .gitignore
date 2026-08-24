@@ -9,3 +9,5 @@ data/*.db
 data/*.sqlite
 assets/brand/Traffic_brandbook_V4.pdf
 assets/brand/Logo.zip
+.~lock.*
+*.tmp
