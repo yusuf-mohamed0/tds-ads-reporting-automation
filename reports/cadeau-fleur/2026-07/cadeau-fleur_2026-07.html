@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('assets/fonts/AvenirLTStd-Roman.otf') format('opentype');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('assets/fonts/AvenirLTStd-Book.otf') format('opentype');
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('assets/fonts/AvenirLTStd-Medium.otf') format('opentype');
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: 'Avenir Next LT Pro';
+    src: url('assets/fonts/AvenirLTStd-Light.otf') format('opentype');
+    font-weight: 300;
+  }
+  @font-face {
+    font-family: 'Reenie Beanie';
+    src: url('assets/fonts/ReenieBeanie-Regular.ttf') format('truetype');
+  }
+  @page {
+    size: 10in 7.5in;
+    margin: 15mm 12mm 14mm 12mm;
+    @bottom-left {
+      content: "TRAFFIC";
+      font-family: 'Avenir Next LT Pro';
+      font-size: 10pt; color: #171414; font-weight: 600;
+    }
+    @bottom-center {
+      content: "";
+      font-family: 'Avenir Next LT Pro';
+      border-top: 1px solid #D8D8D8;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-family: 'Avenir Next LT Pro';
+      font-size: 10pt; color: #838081; font-weight: 400;
+    }
+  }
+  @page:first {
+    margin: 0;
+    background: #171414;
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; border: 0; }
+    @bottom-right { content: ""; }
+  }
+  :root {
+    --brand: #171414;
+    --brand-soft: #3D3B3B;
+    --accent: #FCB900;
+    --accent-dim: #F89D4B;
+    --ink: #171414;
+    --muted: #838081;
+    --line: #E9E9E9;
+    --bg-soft: #FCF6F2;
+    --ok: #087F5B;
+    --bad: #B42318;
+    --warn: #F89D4B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Avenir Next LT Pro';
+    color: var(--ink); margin: 0; font-size: 10pt; line-height: 1.45;
+  }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  /* ---------- Cover ---------- */
+  .cover { display: flex; flex-direction: column; justify-content: space-between; height: 161mm; }
+  .cover-head { display: flex; justify-content: space-between; align-items: center; }
+  .cover-brand { color: var(--brand); font-weight: 600; letter-spacing: 2px; font-size: 11pt; }
+  .cover-mark {
+    width: 52px; height: 52px; border-radius: 12px; background: var(--brand);
+    color: var(--accent); font-weight: 600; font-size: 20pt;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cover-title { color: var(--brand); font-size: 27pt; font-weight: 600; line-height: 1.1; margin: 0 0 8px 0; }
+  .cover-kicker {
+    display: inline-block; background: var(--accent); color: var(--brand);
+    font-weight: 600; letter-spacing: 1.5px; font-size: 9.5pt;
+    padding: 4px 10px; border-radius: 4px; text-transform: uppercase;
+  }
+  .cover-sub { color: var(--muted); font-size: 13pt; margin-top: 10px; }
+  .cover-rule { width: 70px; height: 4px; background: var(--accent); border-radius: 2px; margin: 18px 0; }
+  .cover-meta { margin-top: 8px; }
+  .cover-meta div { font-size: 11pt; margin: 3px 0; color: var(--ink); }
+  .cover-meta .muted { color: var(--muted); }
+  .cover-foot {
+    border-top: 2px solid var(--brand); padding-top: 10px;
+    color: var(--muted); font-size: 8.5pt;
+  }
+
+  /* ---------- Section headers ---------- */
+  h2.section {
+    color: var(--brand); font-size: 15pt; font-weight: 600;
+    border-bottom: 3px solid var(--accent); padding-bottom: 4px; margin: 0 0 12px 0;
+  }
+  h3.block { color: var(--brand); font-size: 11.5pt; margin: 16px 0 6px 0; }
+  .lead { color: #171414; font-size: 10.5pt; line-height: 1.6; margin: 0 0 14px 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.5pt; }
+
+  /* ---------- KPI dashboard ---------- */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 4px 0 10px 0; }
+  .kpi-card {
+    background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 11px; page-break-inside: avoid;
+  }
+  .kpi-card .label { color: var(--muted); font-size: 7.5pt; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-card .value { font-size: 16pt; font-weight: 600; color: var(--brand); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi-card .delta { font-size: 8pt; margin-top: 2px; }
+  .kpi-card .sub { font-size: 8pt; color: var(--muted); margin-top: 2px; }
+  .up { color: var(--ok); }
+  .down { color: var(--bad); }
+  .flat { color: var(--muted); }
+
+  /* Budget utilization */
+  .util-wrap { margin: 10px 0 4px 0; }
+  .util-label { display: flex; justify-content: space-between; font-size: 9pt; margin-bottom: 4px; }
+  .util-track { height: 14px; border-radius: 7px; background: #E9E9E9; overflow: hidden; }
+  .util-fill { height: 100%; border-radius: 7px; background: var(--accent); }
+  .util-fill.over { background: var(--bad); }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 12px 0; font-size: 8.2pt; table-layout: fixed; }
+  thead { display: table-header-group; }
+  th {
+    background: #FFFFFF; color: #3D3B3B; text-align: left; padding: 5px 6px;
+    font-weight: 700; font-size: 7.8pt; letter-spacing: .2px; word-wrap: break-word;
+    border-bottom: 1px solid #D8D8D8;
+  }
+  td { border-bottom: 1px solid #E1E1E1; padding: 4px 6px; word-wrap: break-word; overflow-wrap: anywhere; }
+  tr { page-break-inside: avoid; }
+  tr:nth-child(even) td { background: #F0F0F0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row-top td { background: #FFF7DB; border-left: 3px solid #FCB900; }
+  .row-bottom td { background: #F5F5F5; border-left: 3px solid #838081; }
+  .flag { color: var(--bad); font-size: 7.8pt; }
+  .cell-sub { display: block; font-size: 6.8pt; color: var(--muted); font-weight: 400; }
+
+  /* Share-of-spend bar inside table cells */
+  .share { display: flex; align-items: center; gap: 6px; }
+  .share-track { flex: 1; height: 8px; border-radius: 4px; background: #E9E9E9; overflow: hidden; }
+  .share-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+
+  /* ---------- CSS bar charts ---------- */
+  .chart { margin: 6px 0 14px 0; }
+  .chart-title { font-size: 9.5pt; font-weight: 700; color: var(--brand); margin: 0 0 6px 0; }
+  .hbar-row { display: flex; align-items: center; margin: 3px 0; font-size: 8.5pt; }
+  .hbar-label { width: 105px; color: #171414; flex-shrink: 0; }
+  .hbar-track { flex: 1; height: 11px; border-radius: 5px; background: #E9E9E9; overflow: hidden; }
+  .hbar-fill { height: 100%; background: var(--accent); border-radius: 5px; }
+  .hbar-fill.alt { background: var(--brand); }
+  .hbar-val { width: 110px; text-align: right; color: var(--muted); font-size: 7.5pt; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* Conversions */
+  .conv-bars { margin-top: 6px; }
+  .conv-bar-row { display: flex; align-items: center; margin: 2px 0; font-size: 8.3pt; }
+  .conv-bar-label { width: 130px; flex-shrink: 0; }
+  .conv-bar-track { flex: 1; height: 10px; background: #E9E9E9; border-radius: 5px; overflow: hidden; }
+  .conv-bar-fill { height: 100%; background: var(--brand); border-radius: 5px; }
+  .conv-bar-val { width: 60px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Callouts ---------- */
+  .exec-box {
+    background: #171414;
+    color: #f8fafc; border-radius: 0; padding: 9px 12px; margin: 4px 0 7px 0;
+    border-left: 5px solid #FCB900;
+    page-break-inside: avoid;
+  }
+  .exec-box h3 { margin: 0 0 6px 0; color: #FCB900; font-size: 11pt; letter-spacing: 1px; }
+  .exec-box p { margin: 0; font-size: 9pt; line-height: 1.5; }
+  .rec-box {
+    border: 1px solid #E1E1E1; border-left: 4px solid #FCB900;
+    background: #FFFFFF; border-radius: 0; padding: 12px 16px;
+    page-break-inside: avoid;
+  }
+  .rec-box ol { margin: 6px 0 0 0; padding-left: 18px; }
+  .rec-box li { margin: 6px 0; font-size: 9.5pt; }
+  .anomaly-box { border: 1px solid #E1E1E1; border-left: 4px solid #FCB900; background: #FFFFFF; border-radius: 0; padding: 10px 14px; margin-bottom: 12px; }
+  .anomaly-box ul { margin: 4px 0 0 0; padding-left: 18px; }
+  .anomaly-box li { font-size: 9pt; margin: 3px 0; color: #3D3B3B; }
+
+  /* ---------- Misc ---------- */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .prose { background: #FFFFFF; border-left: 4px solid #FCB900; border: 1px solid #E1E1E1; border-left: 4px solid #FCB900; padding: 10px 12px; color: #171414; line-height: 1.55; border-radius: 0; }
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0; }
+  .strip-box { border: 1px solid #E1E1E1; border-radius: 0; padding: 8px 10px; text-align: center; background: #FFFFFF; }
+  .strip-box .label { font-size: 7.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .strip-box .value { font-size: 12.5pt; font-weight: 600; color: #171414; margin-top: 3px; }
+  .toc-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #D8D8D8; font-size: 11pt; }
+  .toc-num { color: #F89D4B; font-weight: 600; margin-right: 8px; }
+  .appendix h3 { margin-top: 16px; }
+  .badge { display: inline-block; background: #171414; color: #fff; border-radius: 3px; padding: 1px 6px; font-size: 7.5pt; font-weight: 700; }
+  .badge.top { background: #087F5B; }
+  .badge.bottom { background: #838081; }
+  .delta-arrow { font-weight: 700; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     OFFICIAL TRAFFIC PPTX TEMPLATE - Pixel-perfect match
+     ═══════════════════════════════════════════════════════════════ */
+  body { background: #FFFFFF; }
+  .page { position: relative; min-height: 160mm; padding-top: 8mm; }
+
+  /* Gold mark top-left on content pages */
+  .page:not(.cover-page)::before {
+    content: "";
+    position: absolute; top: 10mm; left: 0;
+    width: 18mm; height: 7mm;
+    background: url("assets/company/gold-mark-small.png") left top / contain no-repeat;
+  }
+
+  /* Section nav breadcrumb (gray text above section title) */
+  .page:not(.cover-page) > h2.section::before {
+    content: "REPORT SCOPE     REACH     MESSAGING     CONTENT     AUDIENCE     ADS     INSIGHTS";
+    display: block;
+    margin: -5mm 0 7mm 20mm;
+    color: #838081;
+    font-size: 8.2pt;
+    font-weight: 400;
+    letter-spacing: .2px;
+    white-space: pre;
+  }
+
+  /* Section title - matches PPTX exactly */
+  .page:not(.cover-page) > h2.section {
+    border: 0;
+    padding: 0;
+    margin: 0 0 5mm 0;
+    color: #171414;
+    font-size: 24pt;
+    line-height: 1;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+
+  /* Gold underline after section title */
+  .page:not(.cover-page) > h2.section::after {
+    content: "";
+    display: inline-block;
+    width: 11mm;
+    height: 3px;
+    margin-left: 3mm;
+    vertical-align: middle;
+    background: #FCB900;
+  }
+
+  /* ═══ COVER PAGE - dark #171414 with gold corner ═══ */
+  .cover-page {
+    margin: 0;
+    padding: 0;
+    width: 254mm;
+    height: 190.5mm;
+    min-height: 0;
+    overflow: hidden;
+    background: #171414 url("assets/company/cover-bg.png") center / cover no-repeat;
+    color: #FFFFFF;
+  }
+  .cover-page .cover { height: 190.5mm; padding: 13mm 15mm 12mm 15mm; }
+  .cover-head { align-items: flex-start; }
+
+  /* White Traffic logo on cover - positioned like PPTX */
+  .cover-brand {
+    position: absolute;
+    top: 15mm;
+    left: 15mm;
+    color: #FFFFFF;
+    font-size: 27pt;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: none;
+  }
+  .cover-brand::after { content: "."; color: #FCB900; }
+  .cover-mark { display: none; }
+
+  /* MARKETING REPORT kicker */
+  .cover-kicker {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #FFFFFF;
+    font-size: 28pt;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  /* Client Name + Date */
+  .cover-title { color: #FFFFFF; font-size: 20pt; font-weight: 600; margin-top: 12mm !important; }
+  .cover-sub { color: #FFFFFF; font-size: 13pt; }
+  .cover-rule { width: 42mm; height: 2px; border-radius: 0; background: #FCB900; }
+  .cover-meta div, .cover-meta .muted { color: #FFFFFF; }
+  .cover-foot { border-color: #FCB900; color: #E9E9E9; }
+
+  /* ═══ CONTENT PAGES ═══ */
+  h3.block { color: #171414; font-size: 12pt; text-transform: uppercase; }
+  .lead { color: #3D3B3B; }
+  .kpi-card, .strip-box, .client-block {
+    border: 1px solid #E1E1E1;
+    border-radius: 0;
+    background: #FFFFFF;
+  }
+  .kpi-card { border-top: 3px solid #FCB900; }
+  .kpi-grid { gap: 6px; }
+  .kpi-card { padding: 4px 7px; }
+  .kpi-card .value { font-size: 13pt; }
+  .kpi-card .value, .strip-box .value { color: #171414; }
+  table { border-top: 1px solid #D8D8D8; }
+  th {
+    background: #FFFFFF;
+    color: #3D3B3B;
+    border-bottom: 1px solid #D8D8D8;
+    font-weight: 700;
+  }
+  td { border-bottom-color: #E1E1E1; }
+  tr:nth-child(even) td { background: #F0F0F0; }
+  .row-top td { background: #FFF7DB; border-left-color: #FCB900; }
+  .row-bottom td { background: #F5F5F5; border-left-color: #838081; }
+  .share-track, .hbar-track, .conv-bar-track, .util-track { background: #E9E9E9; }
+  .share-fill, .hbar-fill, .util-fill { background: #FCB900; }
+  .hbar-fill.alt, .conv-bar-fill { background: #3D3B3B; }
+  .exec-box {
+    border-radius: 0;
+    border-left: 5px solid #FCB900;
+    background: #171414;
+  }
+  .exec-box { padding: 9px 12px; margin-bottom: 7px; }
+  .exec-box p { font-size: 9pt; line-height: 1.5; }
+  h3.block { margin-top: 10px; margin-bottom: 4px; }
+  .exec-box h3 { color: #FCB900; }
+  .rec-box, .anomaly-box, .prose {
+    border: 1px solid #E1E1E1;
+    border-left: 4px solid #FCB900;
+    border-radius: 0;
+    background: #FFFFFF;
+  }
+  .anomaly-box li { color: #3D3B3B; }
+  .badge, .badge.top { background: #171414; }
+  .badge.bottom { background: #838081; }
+  .toc-line { border-color: #D8D8D8; }
+  .toc-num { color: #F89D4B; }
+</style>
+<style>
+  @page dark {
+    size: 10in 7.5in;
+    margin: 0;
+    background: #171414;
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; border: 0; }
+    @bottom-right { content: ""; }
+  }
+  .ref-page { min-height: 160mm; padding-top: 0; }
+  .ref-page::before { display: none !important; }
+  .ref-head { display: flex; align-items: center; gap: 13mm; margin-bottom: 13mm; }
+  .ref-mark { width: 24mm; height: 8.5mm; object-fit: contain; }
+  .ref-nav { display: flex; align-items: center; gap: 7mm; color: #838081; font-size: 9pt; white-space: nowrap; }
+  .ref-nav span.active { color: #171414; font-weight: 700; border: 1.5px solid #F89D4B; border-radius: 50%; padding: 2.5mm 4mm; }
+  .ref-title { margin: 0; color: #171414; font-size: 27pt; line-height: 1; text-transform: uppercase; }
+  .ref-subtitle { margin: 3mm 0 8mm 0; font-size: 14pt; }
+  .ref-subtitle strong { display: inline-block; min-width: 32mm; font-weight: 400; }
+  .ref-hand { color: #DFA629; font-family: 'Reenie Beanie'; font-size: 23pt; line-height: .8; }
+  .ref-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 7mm 0; }
+  .ref-card { border: 1px solid #E1E1E1; border-top: 2px solid #FCB900; padding: 4mm; }
+  .ref-card .label { color: #838081; font-size: 8pt; text-transform: uppercase; }
+  .ref-card .value { margin-top: 1mm; color: #171414; font-size: 19pt; font-weight: 600; }
+  .ref-note { font-size: 11pt; line-height: 1.55; }
+  .ref-page table { font-size: 9pt; }
+  .ref-page th { font-size: 8.5pt; }
+  .budget-grid { width: 128mm; margin: 18mm 0 0 8mm; font-size: 22pt; }
+  .budget-row { display: grid; grid-template-columns: 45mm 1fr; border-bottom: 2px solid #171414; padding: 4mm 0; }
+  .budget-row:last-child { border-bottom: 0; }
+  .insight-list { margin: 8mm 0 0 0; padding-left: 7mm; font-size: 11pt; line-height: 1.35; }
+  .insight-list li { margin-bottom: 3.5mm; }
+  .contents-page { page: dark; width: 254mm; height: 190.5mm; padding: 14mm 16mm; color: #FFFFFF; background: #171414; }
+  .contents-page::before { display: none !important; }
+  .contents-page .ref-mark { content: url('assets/company/traffic-logo-white.png'); }
+  .contents-title { margin: 15mm 0 15mm 0; font-size: 28pt; }
+  .contents-grid { display: grid; grid-template-columns: 1fr 1.6fr 22mm; gap: 5mm 8mm; font-size: 18pt; font-weight: 700; }
+  .contents-line { border-bottom: 1px solid #F89D4B; }
+  .contents-page-number { font-size: 12pt; font-weight: 400; }
+  .thank-title { margin-top: 72mm; font-size: 38pt; font-style: italic; line-height: 1.05; }
+  .ref-scope { margin-top: 12mm; font-size: 15pt; line-height: 1.5; }
+  [dir="rtl"] { font-family: 'Avenir Next LT Pro'; }
+</style>
+</head>
+<body>
+
+
+
+<!-- Cover -->
+<div class="page cover-page">
+  <div class="cover">
+    <div class="cover-head"><div class="cover-brand">Traffic</div></div>
+    <div>
+      <div class="cover-kicker">MARKETING<br>REPORT</div>
+      <h1 class="cover-title">Client Name: Cadeau Fleur</h1>
+      <div class="cover-sub">Date: 31/07/2026</div>
+    </div>
+    <div></div>
+  </div>
+</div>
+
+<!-- What to expect -->
+<div class="page contents-page">
+  <img class="ref-mark" src="assets/company/traffic-logo-white.png" alt="Traffic">
+  <h1 class="contents-title">WHAT TO EXPECT:</h1>
+  <div class="contents-grid">
+    
+    <div>REPORT SCOPE</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>REACH</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>MESSAGING</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>CONTENT</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>AUDIENCE</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>ADS</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+    <div>INSIGHTS</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
+    
+  </div>
+</div>
+
+<!-- Report scope -->
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="active">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Report Scope</h1>
+  <div class="ref-hand">Achievements &amp; Challenges</div>
+  <div class="ref-scope">
+    <ul>
+      <li>This month's approach generated 340 results across 21 campaigns with a total spend of 19,129 EGP. Messaging campaigns generated 340 conversations. Total reach was 71,704 with 193,435 impressions.</li>
+      
+    </ul>
+  </div>
+</div>
+
+<!-- Reach: fixed Facebook and Instagram pages — shows paid metrics from Ads Insights when Page API unavailable -->
+
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="active">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Reach</h1>
+  <div class="ref-subtitle"><strong>Facebook</strong>01/07/2026 - 31/07/2026</div>
+  
+  <div class="ref-cards">
+    
+    <div class="ref-card"><div class="label">Impressions</div><div class="value">43.7K</div></div>
+    
+    <div class="ref-card"><div class="label">Organic</div><div class="value">4.4K</div></div>
+    
+    <div class="ref-card"><div class="label">Paid</div><div class="value">39.3K</div></div>
+    
+    <div class="ref-card"><div class="label">Change</div><div class="value">N/A</div></div>
+    
+  </div>
+  
+  <h3>Organic vs Paid</h3>
+  <div class="util-track"><div class="util-fill" style="width: 90%"></div></div>
+  <p class="ref-note">Paid 90% &middot; Organic 10%</p>
+  
+  
+  
+</div>
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="active">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Reach</h1>
+  <div class="ref-subtitle"><strong>Instagram</strong>01/07/2026 - 31/07/2026</div>
+  
+  <div class="ref-cards">
+    
+    <div class="ref-card"><div class="label">Impressions</div><div class="value">149.7K</div></div>
+    
+    <div class="ref-card"><div class="label">Organic</div><div class="value">15.0K</div></div>
+    
+    <div class="ref-card"><div class="label">Paid</div><div class="value">134.7K</div></div>
+    
+    <div class="ref-card"><div class="label">Change</div><div class="value">N/A</div></div>
+    
+  </div>
+  
+  <h3>Organic vs Paid</h3>
+  <div class="util-track"><div class="util-fill" style="width: 90%"></div></div>
+  <p class="ref-note">Paid 90% &middot; Organic 10%</p>
+  
+  
+  
+</div>
+
+
+<!-- Messaging: fixed Facebook and Instagram pages -->
+
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="active">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Messaging</h1>
+  <div class="ref-subtitle"><strong>Facebook</strong>01/07/2026 - 31/07/2026</div>
+  <h3>Contacts</h3>
+  <p class="ref-note">People who messaged your business during this reporting period.</p>
+  
+  <div class="ref-cards" style="grid-template-columns: repeat(2, 1fr); width: 135mm;">
+    <div class="ref-card"><div class="label">Total Contacts</div><div class="value">170</div></div>
+    <div class="ref-card"><div class="label">Messaging Conversations Started</div><div class="value">136</div></div>
+  </div>
+  
+</div>
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="active">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Messaging</h1>
+  <div class="ref-subtitle"><strong>Instagram</strong>01/07/2026 - 31/07/2026</div>
+  <h3>Contacts</h3>
+  <p class="ref-note">People who messaged your business during this reporting period.</p>
+  
+  <div class="ref-cards" style="grid-template-columns: repeat(2, 1fr); width: 135mm;">
+    <div class="ref-card"><div class="label">Total Contacts</div><div class="value">170</div></div>
+    <div class="ref-card"><div class="label">Messaging Conversations Started</div><div class="value">136</div></div>
+  </div>
+  
+</div>
+
+
+<!-- Content: fixed Facebook and Instagram pages — shows top campaigns when organic posts unavailable -->
+
+
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="active">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Content</h1>
+  <div class="ref-subtitle"><strong>Facebook</strong>01/07/2026 - 31/07/2026</div>
+  
+  <h3>Top Campaign Performance</h3>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CTR</th></tr></thead>
+    <tbody>
+      
+      <tr><td>05-2026 | Engagement | New</td><td class="num">19,129 EGP</td><td class="num">340</td><td class="num">1.80%</td></tr>
+      
+      <tr><td>06-2025 | Traffic</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>06-2025 | Sales</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>06-2025 | Engagement</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>07-2025 | Sales - deactivated</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>07-2025 | Engagement</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+    </tbody>
+  </table>
+  <p class="ref-note muted">Organic content data unavailable — showing top ad campaign performance instead.</p>
+  
+</div>
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="active">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Content</h1>
+  <div class="ref-subtitle"><strong>Instagram</strong>01/07/2026 - 31/07/2026</div>
+  
+  <h3>Top Campaign Performance</h3>
+  <table>
+    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CTR</th></tr></thead>
+    <tbody>
+      
+      <tr><td>05-2026 | Engagement | New</td><td class="num">19,129 EGP</td><td class="num">340</td><td class="num">1.80%</td></tr>
+      
+      <tr><td>06-2025 | Traffic</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>06-2025 | Sales</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>06-2025 | Engagement</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>07-2025 | Sales - deactivated</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+      <tr><td>07-2025 | Engagement</td><td class="num">0 EGP</td><td class="num">0</td><td class="num">0.00%</td></tr>
+      
+    </tbody>
+  </table>
+  <p class="ref-note muted">Organic content data unavailable — showing top ad campaign performance instead.</p>
+  
+</div>
+
+
+<!-- Audience: fixed Facebook and Instagram pages — uses Ads Insights demographic/country data when Page API unavailable -->
+
+
+
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="active">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Audience</h1>
+  <div class="ref-subtitle"><strong>Facebook</strong>01/07/2026 - 31/07/2026</div>
+  
+  
+  
+  <h3>Age &amp; Gender Distribution</h3>
+  <table style="width:120mm;font-size:9pt"><thead><tr><th>Age Group</th><th class="num">Female</th><th class="num">Male</th><th class="num">Total</th></tr></thead><tbody>
+    <tr><td>18-24</td><td class="num">6%</td><td class="num">8%</td><td class="num">14%</td></tr><tr><td>25-34</td><td class="num">28%</td><td class="num">28%</td><td class="num">57%</td></tr><tr><td>35-44</td><td class="num">11%</td><td class="num">6%</td><td class="num">17%</td></tr><tr><td>45-54</td><td class="num">9%</td><td class="num">2%</td><td class="num">11%</td></tr><tr><td>55-64</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr><tr><td>65+</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
+  </tbody></table>
+  
+</div>
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="active">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Audience</h1>
+  <div class="ref-subtitle"><strong>Instagram</strong>01/07/2026 - 31/07/2026</div>
+  
+  
+  
+  <h3>Age &amp; Gender Distribution</h3>
+  <table style="width:120mm;font-size:9pt"><thead><tr><th>Age Group</th><th class="num">Female</th><th class="num">Male</th><th class="num">Total</th></tr></thead><tbody>
+    <tr><td>18-24</td><td class="num">6%</td><td class="num">8%</td><td class="num">14%</td></tr><tr><td>25-34</td><td class="num">28%</td><td class="num">28%</td><td class="num">57%</td></tr><tr><td>35-44</td><td class="num">11%</td><td class="num">6%</td><td class="num">17%</td></tr><tr><td>45-54</td><td class="num">9%</td><td class="num">2%</td><td class="num">11%</td></tr><tr><td>55-64</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr><tr><td>65+</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
+  </tbody></table>
+  
+</div>
+
+
+<!-- Ads: fixed Facebook and Instagram pages -->
+
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="active">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Ads</h1>
+  <div class="ref-subtitle"><strong>Facebook</strong>01/07/2026 - 31/07/2026</div>
+  
+  <div class="ref-cards">
+    <div class="ref-card"><div class="label">Amount Spent</div><div class="value">19,129 EGP</div></div>
+    <div class="ref-card"><div class="label">Results</div><div class="value">340</div></div>
+    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">56 EGP</div></div>
+    <div class="ref-card"><div class="label">CTR</div><div class="value">0.74%</div></div>
+  </div>
+  <table><thead><tr><th>Platform</th><th class="num">Impressions</th><th class="num">Reach</th><th class="num">Share</th></tr></thead>
+  <tbody><tr><td>Facebook</td><td class="num">193.4K</td><td class="num">71.7K</td><td class="num">100%</td></tr></tbody></table>
+  
+</div>
+
+
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="active">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Ads</h1>
+  <div class="ref-subtitle"><strong>Instagram</strong>01/07/2026 - 31/07/2026</div>
+  
+  <div class="ref-cards">
+    <div class="ref-card"><div class="label">Amount Spent</div><div class="value">0 EGP</div></div>
+    <div class="ref-card"><div class="label">Results</div><div class="value">0</div></div>
+    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">-</div></div>
+    <div class="ref-card"><div class="label">CTR</div><div class="value">0.74%</div></div>
+  </div>
+  <table><thead><tr><th>Platform</th><th class="num">Impressions</th><th class="num">Reach</th><th class="num">Share</th></tr></thead>
+  <tbody><tr><td>Instagram</td><td class="num">0</td><td class="num">0</td><td class="num">0%</td></tr></tbody></table>
+  
+</div>
+
+
+<!-- Budget -->
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="active">ADS</span>
+    
+    <span class="">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Ads</h1>
+  <div class="ref-hand">Budget &amp; Spend Overview</div>
+  <div class="budget-grid">
+    <div class="budget-row"><span>Budget</span><strong>-</strong></div>
+    <div class="budget-row"><span>Spent</span><strong>-</strong></div>
+    <div class="budget-row"><span>VAT</span><strong>-</strong></div>
+    <div class="budget-row"><span>Remaining</span><strong>-</strong></div>
+  </div>
+</div>
+
+<!-- Insights -->
+<div class="page ref-page">
+  <div class="ref-head">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="ref-nav">
+    
+    <span class="">REPORT SCOPE</span>
+    
+    <span class="">REACH</span>
+    
+    <span class="">MESSAGING</span>
+    
+    <span class="">CONTENT</span>
+    
+    <span class="">AUDIENCE</span>
+    
+    <span class="">ADS</span>
+    
+    <span class="active">INSIGHTS</span>
+    
+  </div>
+</div>
+  <h1 class="ref-title">Insights</h1>
+  <ul class="insight-list">
+    <li>Average cost per result: 56 EGP across 340 results.</li><li>Messaging campaigns generated 340 conversations.</li><li>Overall click-through rate: 0.74%.</li>
+    
+    
+  </ul>
+</div>
+
+<!-- Thank you -->
+<div class="page contents-page">
+  <div class="cover-brand">Traffic</div>
+  <div class="thank-title">THANK<br>YOU</div>
+  <div style="margin-top:30mm; font-size:18pt;">Client Name: Cadeau Fleur<br>Date: 31/07/2026</div>
+</div>
+
+</body>
+</html>
