@@ -14,12 +14,12 @@
   .ref-page::before { display: none !important; }
   .ref-head { display:flex; align-items:center; gap:13mm; margin-bottom:13mm; }
   .ref-mark { width:24mm; height:8.5mm; object-fit:contain; }
-  .ref-nav { display:flex; gap:12mm; color:#747474; font-size:10pt; }
-  .ref-nav .active { color:#171414; font-weight:700; border:1.5px solid #DFA629; border-radius:50%; padding:2.5mm 4mm; }
+  .ref-nav { display:flex; gap:12mm; color:#838081; font-size:10pt; }
+  .ref-nav .active { color:#171414; font-weight:700; border:1.5px solid #F89D4B; border-radius:50%; padding:2.5mm 4mm; }
   .ref-title { margin:0 0 7mm; color:#171414; font-size:27pt; text-transform:uppercase; }
   .ref-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; margin-bottom:8mm; }
   .ref-card { border:1px solid #E1E1E1; border-top:2px solid #FCB900; padding:4mm; }
-  .ref-card .label { color:#747474; font-size:8pt; text-transform:uppercase; }
+  .ref-card .label { color:#838081; font-size:8pt; text-transform:uppercase; }
   .ref-card .value { margin-top:1mm; font-size:18pt; font-weight:600; }
   .dark-page { page:dark; width:254mm; height:190.5mm; padding:14mm 16mm; background:#171414; color:#FFFFFF; }
   .dark-page::before { display:none !important; }
@@ -43,13 +43,13 @@
 </div>
 
 <div class="page dark-page">
-  <img class="ref-mark" src="assets/company/image6.png" alt="Traffic">
+  <img class="ref-mark" src="assets/company/traffic-logo-white.png" alt="Traffic">
   <h1 style="margin:18mm 0 18mm;font-size:28pt">WHAT TO EXPECT:</h1>
   <div style="font-size:20pt;line-height:2.3">PORTFOLIO SUMMARY<br>ADS OVERVIEW<br>INSIGHTS</div>
 </div>
 
 <div class="page ref-page">
-  <div class="ref-head"><img class="ref-mark" src="assets/company/image8.png" alt="Traffic"><div class="ref-nav"><span class="active">PORTFOLIO</span><span>ADS</span><span>INSIGHTS</span></div></div>
+  <div class="ref-head"><img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic"><div class="ref-nav"><span class="active">PORTFOLIO</span><span>ADS</span><span>INSIGHTS</span></div></div>
   <h1 class="ref-title">Portfolio Summary</h1>
   <div class="ref-cards">
     <div class="ref-card"><div class="label">Total Spend</div><div class="value">{{ t.spend_fmt | default('-') }}</div></div>
@@ -63,7 +63,7 @@
 </div>
 
 <div class="page ref-page">
-  <div class="ref-head"><img class="ref-mark" src="assets/company/image8.png" alt="Traffic"><div class="ref-nav"><span>PORTFOLIO</span><span class="active">ADS</span><span>INSIGHTS</span></div></div>
+  <div class="ref-head"><img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic"><div class="ref-nav"><span>PORTFOLIO</span><span class="active">ADS</span><span>INSIGHTS</span></div></div>
   <h1 class="ref-title">Ads</h1>
   <table><thead><tr><th>Client</th><th class="num">Budget Util.</th><th class="num">Impressions</th><th class="num">Results</th></tr></thead><tbody>
   {% for c in clients %}{% if c.kpis %}<tr><td>{{ c.name | default(c.client_id) }}</td><td class="num">{{ c.kpis.budget_utilization | default('-') }}%</td><td class="num">{{ c.kpis.impressions_fmt | default('-') }}</td><td class="num">{{ c.kpis.results_fmt | default('-') }}</td></tr>{% endif %}{% endfor %}
@@ -71,7 +71,7 @@
 </div>
 
 <div class="page ref-page">
-  <div class="ref-head"><img class="ref-mark" src="assets/company/image8.png" alt="Traffic"><div class="ref-nav"><span>PORTFOLIO</span><span>ADS</span><span class="active">INSIGHTS</span></div></div>
+  <div class="ref-head"><img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic"><div class="ref-nav"><span>PORTFOLIO</span><span>ADS</span><span class="active">INSIGHTS</span></div></div>
   <h1 class="ref-title">Insights</h1>
   {% for c in clients %}{% if c.recommendations %}<h3>{{ c.name | default(c.client_id) }}</h3><ul>{% for r in c.recommendations[:2] %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}{% endfor %}
 </div>

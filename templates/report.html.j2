@@ -16,15 +16,15 @@
   .ref-page::before { display: none !important; }
   .ref-head { display: flex; align-items: center; gap: 13mm; margin-bottom: 13mm; }
   .ref-mark { width: 24mm; height: 8.5mm; object-fit: contain; }
-  .ref-nav { display: flex; align-items: center; gap: 7mm; color: #747474; font-size: 9pt; white-space: nowrap; }
-  .ref-nav span.active { color: #171414; font-weight: 700; border: 1.5px solid #DFA629; border-radius: 50%; padding: 2.5mm 4mm; }
+  .ref-nav { display: flex; align-items: center; gap: 7mm; color: #838081; font-size: 9pt; white-space: nowrap; }
+  .ref-nav span.active { color: #171414; font-weight: 700; border: 1.5px solid #F89D4B; border-radius: 50%; padding: 2.5mm 4mm; }
   .ref-title { margin: 0; color: #171414; font-size: 27pt; line-height: 1; text-transform: uppercase; }
   .ref-subtitle { margin: 3mm 0 8mm 0; font-size: 14pt; }
   .ref-subtitle strong { display: inline-block; min-width: 32mm; font-weight: 400; }
   .ref-hand { color: #DFA629; font-family: 'Reenie Beanie'; font-size: 23pt; line-height: .8; }
   .ref-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 7mm 0; }
   .ref-card { border: 1px solid #E1E1E1; border-top: 2px solid #FCB900; padding: 4mm; }
-  .ref-card .label { color: #747474; font-size: 8pt; text-transform: uppercase; }
+  .ref-card .label { color: #838081; font-size: 8pt; text-transform: uppercase; }
   .ref-card .value { margin-top: 1mm; color: #171414; font-size: 19pt; font-weight: 600; }
   .ref-note { font-size: 11pt; line-height: 1.55; }
   .ref-page table { font-size: 9pt; }
@@ -36,21 +36,21 @@
   .insight-list li { margin-bottom: 3.5mm; }
   .contents-page { page: dark; width: 254mm; height: 190.5mm; padding: 14mm 16mm; color: #FFFFFF; background: #171414; }
   .contents-page::before { display: none !important; }
-  .contents-page .ref-mark { content: url('assets/company/image6.png'); }
+  .contents-page .ref-mark { content: url('assets/company/traffic-logo-white.png'); }
   .contents-title { margin: 15mm 0 15mm 0; font-size: 28pt; }
   .contents-grid { display: grid; grid-template-columns: 1fr 1.6fr 22mm; gap: 5mm 8mm; font-size: 18pt; font-weight: 700; }
-  .contents-line { border-bottom: 1px solid #DFA629; }
+  .contents-line { border-bottom: 1px solid #F89D4B; }
   .contents-page-number { font-size: 12pt; font-weight: 400; }
   .thank-title { margin-top: 72mm; font-size: 38pt; font-style: italic; line-height: 1.05; }
   .ref-scope { margin-top: 12mm; font-size: 15pt; line-height: 1.5; }
-  [dir="rtl"] { font-family: 'Alexandria'; }
+  [dir="rtl"] { font-family: 'Avenir Next LT Pro'; }
 </style>
 </head>
 <body>
 
 {% macro nav(active) -%}
 <div class="ref-head">
-  <img class="ref-mark" src="assets/company/image8.png" alt="Traffic">
+  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
   <div class="ref-nav">
     {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
     <span class="{% if item == active %}active{% endif %}">{{ item }}</span>
@@ -74,7 +74,7 @@
 
 <!-- What to expect -->
 <div class="page contents-page">
-  <img class="ref-mark" src="assets/company/image6.png" alt="Traffic">
+  <img class="ref-mark" src="assets/company/traffic-logo-white.png" alt="Traffic">
   <h1 class="contents-title">WHAT TO EXPECT:</h1>
   <div class="contents-grid">
     {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
