@@ -19,7 +19,21 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.font_manager as fm
+from matplotlib.font_manager import FontProperties
 import numpy as np
+
+# Brand fonts
+FONT_DIR = ROOT / "templates" / "assets" / "fonts"
+fm.fontManager.addfont(str(FONT_DIR / "ProximaNova-Regular.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "Proxima Nova Bold.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "Proxima Nova Semibold.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "Proxima Nova Extrabold.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "Proxima Nova Black.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "Proxima Nova Thin.otf"))
+fm.fontManager.addfont(str(FONT_DIR / "ReenieBeanie-Regular.ttf"))
+plt.rcParams['font.family'] = 'Proxima Nova'
+plt.rcParams['font.sans-serif'] = ['Proxima Nova']
 
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
@@ -160,8 +174,9 @@ def draw_section_header(ax, title, platform, date_range, subtitle=None):
     ax.text(0.05, 0.87, title, fontsize=32, fontweight='bold', color=META_TEXT,
             transform=ax.transAxes)
     if subtitle:
-        ax.text(0.05, 0.82, subtitle, fontsize=14, color=GOLD,
-                transform=ax.transAxes, fontfamily='serif', fontstyle='italic')
+        reenie_fp = FontProperties(fname=str(FONT_DIR / "ReenieBeanie-Regular.ttf"))
+        ax.text(0.05, 0.82, subtitle, fontsize=18, color=GOLD,
+                transform=ax.transAxes, fontproperties=reenie_fp)
     ax.text(0.05, 0.77 if subtitle else 0.82, platform, fontsize=12, color=META_MUTED,
             transform=ax.transAxes)
     ax.text(0.15, 0.77 if subtitle else 0.82, date_range, fontsize=11, color=META_MUTED,
