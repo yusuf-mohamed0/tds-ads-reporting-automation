@@ -298,27 +298,64 @@ def fill_cover(slide, ctx):
 
 
 def fill_thank_you(slide, ctx):
-    """Fill thank you slide (last) with client name and date."""
+    """Fill thank you slide - cover template text and add white content."""
     for shape in slide.shapes:
         if shape.has_text_frame:
             for para in shape.text_frame.paragraphs:
-                text = para.text.strip()
-                if text == "Client Name":
-                    for run in para.runs:
-                        run.text = f"Client Name: {ctx['client_name']}"
-                    if not para.runs:
-                        para.text = f"Client Name: {ctx['client_name']}"
-                elif text == "Date":
-                    for run in para.runs:
-                        run.text = f"Date: {ctx['date']}"
-                    if not para.runs:
-                        para.text = f"Date: {ctx['date']}"
+                for run in para.runs:
+                    run.text = ""
+
+    cover = slide.shapes.add_shape(
+        1, Inches(0.5), Inches(2.0), Inches(9), Inches(4.0)
+    )
+    cover.fill.solid()
+    cover.fill.fore_color.rgb = RGBColor(0x17, 0x14, 0x14)
+    cover.line.fill.background()
+
+    add_text_box(slide, Inches(0.76), Inches(2.5), Inches(8.5), Inches(1.2),
+                 "THANK YOU", font_size=48, bold=True,
+                 color_rgb=RGBColor(0xFF, 0xFF, 0xFF), alignment=PP_ALIGN.LEFT)
+
+    add_text_box(slide, Inches(0.76), Inches(4.0), Inches(8.5), Inches(0.5),
+                 ctx['client_name'], font_size=18, bold=False,
+                 color_rgb=RGBColor(0xFF, 0xFF, 0xFF), alignment=PP_ALIGN.LEFT)
+
+    add_text_box(slide, Inches(0.76), Inches(4.5), Inches(8.5), Inches(0.5),
+                 ctx['date_range'], font_size=14, bold=False,
+                 color_rgb=RGBColor(0xFF, 0xFF, 0xFF), alignment=PP_ALIGN.LEFT)
+
+
+def update_slide_number(slide, page_num):
+    """Update slide number and hide duplicates."""
+    sn_placeholders = []
+    for shape in slide.shapes:
+        if 'Slide Number Placeholder' in shape.name and shape.has_text_frame:
+            sn_placeholders.append(shape)
+
+    for i, shape in enumerate(sn_placeholders):
+        if i == 0:
+            for para in shape.text_frame.paragraphs:
+                for run in para.runs:
+                    run.text = str(page_num)
+                if not para.runs:
+                    para.text = str(page_num)
+            txBody = shape._element.find('.//{http://schemas.openxmlformats.org/drawingml/2006/main}t')
+            if txBody is not None:
+                txBody.text = str(page_num)
+        else:
+            sp = shape._element
+            spPr = sp.find('{http://schemas.openxmlformats.org/drawingml/2006/main}off')
+            if spPr is None:
+                spPr = sp.find('.//{http://schemas.openxmlformats.org/drawingml/2006/main}off')
+            if spPr is not None:
+                spPr.set('x', '9144000')
+                spPr.set('y', '5143500')
 
 
 def add_section_header(slide, section, platform, date_range):
     """Add a section header text overlay, positioned below the nav bar."""
     white_rect = slide.shapes.add_shape(
-        1, Inches(0.76), Inches(1.2), Inches(9), Inches(0.6)
+        1, Inches(0.76), Inches(1.2), Inches(9), Inches(0.5)
     )
     white_rect.fill.solid()
     white_rect.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
@@ -340,7 +377,7 @@ def add_section_header(slide, section, platform, date_range):
         tf2 = txBox2.text_frame
         p2 = tf2.paragraphs[0]
         run2 = p2.add_run()
-        run2.text = f"{platform}    {date_range}"
+        run2.text = f"{platform}  |  {date_range}"
         run2.font.size = Pt(14)
         run2.font.name = 'Proxima Nova'
         run2.font.color.rgb = RGBColor(0x65, 0x67, 0x6B)
@@ -362,7 +399,7 @@ def fill_scope(slide, ctx):
 
 
 def fill_section_slide(slide, ctx, section, platform, data, page_num):
-    """Fill a content section slide with data."""
+    """Fill a content section slide with data - clear placeholder text only."""
     for shape in slide.shapes:
         if shape.has_text_frame:
             for para in shape.text_frame.paragraphs:
@@ -372,15 +409,11 @@ def fill_section_slide(slide, ctx, section, platform, data, page_num):
                     if text in ('Type hereeeeeeeee', 'Hi hi', 'hi', 'HI') or 'Type here' in text:
                         for run in para.runs:
                             run.text = ""
-                        if para.runs:
-                            para.runs[0].text = f"{section}    {platform}    {ctx['date_range']}"
-                        else:
-                            para.text = f"{section}    {platform}    {ctx['date_range']}"
 
 
 def generate_reach_chart(data, platform, ctx):
     """Generate Meta-style reach chart as image."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -433,7 +466,7 @@ def generate_reach_chart(data, platform, ctx):
 
 def generate_messaging_chart(data, platform, ctx):
     """Generate Meta-style messaging chart as image."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -470,7 +503,7 @@ def generate_messaging_chart(data, platform, ctx):
 
 def generate_content_table(data, platform, ctx):
     """Generate Meta-style content table as image."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -506,7 +539,7 @@ def generate_content_table(data, platform, ctx):
 
 def generate_audience_chart(data, platform, ctx):
     """Generate Meta-style audience demographics chart as image."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -532,31 +565,28 @@ def generate_audience_chart(data, platform, ctx):
         male_pcts.append(m)
 
     if any(v > 0 for v in female_pcts + male_pcts):
+        ax2 = fig.add_axes([0.12, 0.08, 0.85, 0.55])
         x_pos = np.arange(len(age_groups))
         bar_width = 0.35
-        bars1 = ax.bar(x_pos - bar_width/2, female_pcts, bar_width, color='#A8D8F0', label='Women')
-        bars2 = ax.bar(x_pos + bar_width/2, male_pcts, bar_width, color='#1877F2', label='Men')
+        bars1 = ax2.bar(x_pos - bar_width/2, female_pcts, bar_width, color='#A8D8F0', label='Women')
+        bars2 = ax2.bar(x_pos + bar_width/2, male_pcts, bar_width, color='#1877F2', label='Men')
 
-        ax.set_xticks(x_pos)
-        ax.set_xticklabels(age_groups, fontsize=7, color=META_MUTED)
-        ax.set_ylabel('%', fontsize=7, color=META_MUTED)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_color(META_BORDER)
-        ax.spines['bottom'].set_color(META_BORDER)
-        ax.tick_params(colors=META_MUTED, labelsize=7)
-        ax.legend(fontsize=7, loc='upper right')
-
-        fig.subplots_adjust(left=0.15, right=0.95, top=0.70, bottom=0.10)
-    else:
-        fig.subplots_adjust(left=0.15, right=0.95, top=0.70, bottom=0.10)
+        ax2.set_xticks(x_pos)
+        ax2.set_xticklabels(age_groups, fontsize=7, color=META_MUTED)
+        ax2.set_ylabel('%', fontsize=7, color=META_MUTED)
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['right'].set_visible(False)
+        ax2.spines['left'].set_color(META_BORDER)
+        ax2.spines['bottom'].set_color(META_BORDER)
+        ax2.tick_params(colors=META_MUTED, labelsize=7)
+        ax2.legend(fontsize=7, loc='upper right')
 
     return fig_to_buf(fig)
 
 
 def generate_ads_table(data, platform, ctx):
     """Generate Meta-style ads campaign table as image."""
-    fig, ax = plt.subplots(figsize=(10, 5.5))
+    fig, ax = plt.subplots(figsize=(8, 4.5))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -594,7 +624,7 @@ def generate_ads_table(data, platform, ctx):
 
 def generate_budget_table(ctx):
     """Generate budget table as image matching reference style."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis('off')
     fig.patch.set_facecolor('white')
 
@@ -663,6 +693,11 @@ def build_report(template_path, ctx, output_path):
     add_section_header(slides[14], 'ADS', '', ctx['date_range'])
     add_section_header(slides[15], 'INSIGHTS', '', ctx['date_range'])
 
+    page_nums = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10,
+                 10: 11, 11: 12, 12: 13, 13: 14, 14: 15, 15: 16}
+    for idx, page_num in page_nums.items():
+        update_slide_number(slides[idx], page_num)
+
     content_left = Inches(0.76)
     content_top = Inches(3.0)
     content_width = Inches(8.5)
@@ -688,8 +723,15 @@ def build_report(template_path, ctx, output_path):
 
     insights = ctx.get('insights', [])
     if insights:
+        for shape in slides[15].shapes:
+            if shape.has_text_frame:
+                for para in shape.text_frame.paragraphs:
+                    text = para.text.strip()
+                    if text in ('Type hereeeeeeeee', 'Hi hi', 'hi', 'HI') or 'Type here' in text:
+                        for run in para.runs:
+                            run.text = ""
         insight_text = '\n'.join(f'• {ins}' for ins in insights)
-        add_text_box(slides[15], Inches(0.76), Inches(3.0), Inches(8.5), Inches(3.5),
+        add_text_box(slides[15], Inches(0.76), Inches(2.0), Inches(8.5), Inches(4.5),
                      insight_text, font_size=10, color_rgb=RGBColor.from_string('050505'))
 
     prs.save(str(output_path))
