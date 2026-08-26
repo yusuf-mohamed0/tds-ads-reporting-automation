@@ -290,15 +290,11 @@ def fill_cover(slide, ctx):
                         run.text = f"Client Name: {ctx['client_name']}"
                     if not para.runs:
                         para.text = f"Client Name: {ctx['client_name']}"
-                    if shape.has_text_frame:
-                        shape.text_frame.word_wrap = False
                 elif text == "Date":
                     for run in para.runs:
                         run.text = f"Date: {ctx['date']}"
                     if not para.runs:
                         para.text = f"Date: {ctx['date']}"
-                    if shape.has_text_frame:
-                        shape.text_frame.word_wrap = False
 
 
 def fill_thank_you(slide, ctx):
@@ -385,45 +381,6 @@ def add_section_header(slide, section, platform, date_range):
         run2.font.size = Pt(14)
         run2.font.name = 'Proxima Nova'
         run2.font.color.rgb = RGBColor(0x65, 0x67, 0x6B)
-
-
-def overlay_nav_bar(slide, active_section):
-    """Overlay the nav bar with correct highlight for the active section."""
-    nav_items = ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS']
-    
-    nav_rect = slide.shapes.add_shape(
-        1, Inches(0), Inches(0.0), Inches(13.333), Inches(1.3)
-    )
-    nav_rect.fill.solid()
-    nav_rect.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-    nav_rect.line.fill.background()
-    
-    item_width = Inches(1.5)
-    start_x = Inches(0.25)
-    nav_y = Inches(0.55)
-    
-    for i, item in enumerate(nav_items):
-        x = start_x + (item_width * i)
-        is_active = (item == active_section)
-        
-        if is_active:
-            oval = slide.shapes.add_shape(
-                9, x - Inches(0.08), nav_y - Inches(0.03), item_width + Inches(0.05), Inches(0.3)
-            )
-            oval.fill.background()
-            oval.line.color.rgb = RGBColor(0xFC, 0xB9, 0x00)
-            oval.line.width = Pt(1.5)
-        
-        txBox = slide.shapes.add_textbox(x, nav_y, item_width, Inches(0.25))
-        tf = txBox.text_frame
-        tf.word_wrap = False
-        p = tf.paragraphs[0]
-        run = p.add_run()
-        run.text = item
-        run.font.size = Pt(9)
-        run.font.name = 'Proxima Nova'
-        run.font.bold = is_active
-        run.font.color.rgb = RGBColor(0x05, 0x05, 0x05)
 
 
 def fill_scope(slide, ctx):
@@ -720,13 +677,6 @@ def build_report(template_path, ctx, output_path):
     fill_cover(slides[0], ctx)
     fill_scope(slides[2], ctx)
 
-    slide_sections = {
-        3: 'REACH', 4: 'REACH', 5: 'MESSAGING', 6: 'MESSAGING',
-        7: 'CONTENT', 8: 'CONTENT', 9: 'AUDIENCE'
-    }
-    for slide_idx, section in slide_sections.items():
-        overlay_nav_bar(slides[slide_idx], section)
-
     fill_section_slide(slides[3], ctx, 'REACH', 'Facebook', ctx.get('reach_fb', {}), 4)
     fill_section_slide(slides[4], ctx, 'REACH', 'Instagram', ctx.get('reach_ig', {}), 5)
     fill_section_slide(slides[5], ctx, 'MESSAGING', 'Facebook', ctx.get('msg_fb', {}), 6)
@@ -737,13 +687,11 @@ def build_report(template_path, ctx, output_path):
 
     fill_thank_you(slides[10], ctx)
 
-    dup_sections = {
-        11: ('AUDIENCE', 'Instagram'), 12: ('ADS', 'Facebook'),
-        13: ('ADS', 'Instagram'), 14: ('ADS', ''), 15: ('INSIGHTS', '')
-    }
-    for slide_idx, (section, platform) in dup_sections.items():
-        overlay_nav_bar(slides[slide_idx], section)
-        add_section_header(slides[slide_idx], section, platform, ctx['date_range'])
+    add_section_header(slides[11], 'AUDIENCE', 'Instagram', ctx['date_range'])
+    add_section_header(slides[12], 'ADS', 'Facebook', ctx['date_range'])
+    add_section_header(slides[13], 'ADS', 'Instagram', ctx['date_range'])
+    add_section_header(slides[14], 'ADS', '', ctx['date_range'])
+    add_section_header(slides[15], 'INSIGHTS', '', ctx['date_range'])
 
     page_nums = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10,
                  10: 11, 11: 12, 12: 13, 13: 14, 14: 15, 15: 16}
