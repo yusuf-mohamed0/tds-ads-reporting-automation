@@ -86,7 +86,8 @@ def sweep_placeholder_text(slide):
                 if (text in PLACEHOLDER_TEXTS
                         or 'Type here' in text
                         or re.fullmatch(r'X{1,10}', text)
-                        or text == 'Page'):
+                        or text == 'Page'
+                        or text.lower() == 'where'):
                     for run in para.runs:
                         run.text = ""
 
@@ -336,7 +337,7 @@ def build_ctx(data, prev, name, month):
         fb_msg.get("onsite_conversion.messaging_first_reply", {}).get("count", 0)
     )
     fb_response_rate = (
-        round(fb_first_reply / fb_connections * 100, 1) if fb_connections > 0 else 0
+        round(fb_conversations / fb_connections * 100, 1) if fb_connections > 0 else 0
     )
 
     ig_connections = _safe_int(
@@ -352,7 +353,7 @@ def build_ctx(data, prev, name, month):
         ig_msg.get("onsite_conversion.messaging_first_reply", {}).get("count", 0)
     )
     ig_response_rate = (
-        round(ig_first_reply / ig_connections * 100, 1) if ig_connections > 0 else 0
+        round(ig_conversations / ig_connections * 100, 1) if ig_connections > 0 else 0
     )
 
     # Totals for messaging
@@ -418,17 +419,15 @@ def build_ctx(data, prev, name, month):
     }
 
     # ── CONTENT slides (#2 — campaign-level data, NOT messaging) ───────
+    # Campaigns are account-level — they run on BOTH platforms simultaneously.
+    # Both FB and IG content slides show the same active campaigns.
     ctx["content_fb"] = {
-        "campaigns": [
-            c for c in active_camps
-            if _safe_float(c.get("spend", 0)) * (fb_pct / 100) > 0
-        ][:5],
+        "campaigns": active_camps[:5],
+        "platform_note": "Campaigns run across both platforms",
     }
     ctx["content_ig"] = {
-        "campaigns": [
-            c for c in active_camps
-            if _safe_float(c.get("spend", 0)) * (ig_pct / 100) > 0
-        ][:5],
+        "campaigns": active_camps[:5],
+        "platform_note": "Campaigns run across both platforms",
     }
 
     # ── AUDIENCE slides (#17 — real follower data from API, no fabrication) ──
@@ -442,19 +441,17 @@ def build_ctx(data, prev, name, month):
     }
 
     # ── ADS slides (#5 — fix cost-per-result; use totals) ──────────────
+    # Campaigns are account-level — same list for both platforms.
+    # Platform-specific totals come from the platforms dict (already correct).
     ctx["ads_fb"] = {
         "spend": fb_spend, "results": fb_results,
         "impressions": fb_impr, "reach": fb_reach,
-        "ctr": fb_ctr, "campaigns": [
-            c for c in active_camps if _safe_float(c.get("spend", 0)) * (fb_pct / 100) > 0
-        ],
+        "ctr": fb_ctr, "campaigns": active_camps,
     }
     ctx["ads_ig"] = {
         "spend": ig_spend, "results": ig_results,
         "impressions": ig_impr, "reach": ig_reach,
-        "ctr": ig_ctr, "campaigns": [
-            c for c in active_camps if _safe_float(c.get("spend", 0)) * (ig_pct / 100) > 0
-        ],
+        "ctr": ig_ctr, "campaigns": active_camps,
     }
 
     # ── BUDGET (#10 — explicit definitions) ────────────────────────────
@@ -479,8 +476,8 @@ def build_ctx(data, prev, name, month):
     avg_cpr = round(spend / results, 2) if results > 0 else 0
 
     insights = [
-        f"Reach: Total reach was {reach:,} across both platforms "
-        f"(FB {fb_reach:,} + IG {ig_reach:,}, deduplicated).",
+        f"Total deduplicated reach: {reach:,} "
+        f"(Facebook: {fb_reach:,} | Instagram: {ig_reach:,}).",
         f"Facebook: Delivered {fb_impr:,} impressions with {fb_ctr:.1f}% CTR.",
         f"Instagram: Delivered {ig_impr:,} impressions with {ig_ctr:.1f}% CTR.",
         f"Total messaging results: {total_conversations:,} conversations started.",
@@ -868,6 +865,13 @@ def generate_content_table(data, platform, ctx):
             0.02, 0.80, 'No content data available.',
             fontsize=9, color=META_MUTED, transform=ax.transAxes,
         )
+    else:
+        note = data.get('platform_note', '')
+        if note:
+            ax.text(
+                0.02, 0.15, note, fontsize=7, color=META_MUTED,
+                transform=ax.transAxes, fontstyle='italic',
+            )
 
     return fig_to_buf(fig)
 
@@ -902,8 +906,9 @@ def generate_audience_chart(data, platform, ctx):
         0.02, 0.81, 'Lifetime', fontsize=7, color=META_MUTED, transform=ax.transAxes,
     )
     follower_text = fmt_full(followers) if followers > 0 else 'N/A'
+    follower_y = 0.76 if followers > 0 else 0.73  # extra spacing for N/A
     ax.text(
-        0.02, 0.76, follower_text, fontsize=18, fontweight='bold',
+        0.02, follower_y, follower_text, fontsize=18, fontweight='bold',
         color=META_TEXT, transform=ax.transAxes,
     )
 
@@ -1014,15 +1019,23 @@ def generate_ads_table(data, platform, ctx):
         color=META_TEXT, transform=ax.transAxes,
     )
 
-    # Per-campaign rows (top 5 active)
+    # Per-campaign rows (top 5 active) — accumulate totals from displayed campaigns
     campaigns = data.get('campaigns', [])
     ry -= 0.06
+    total_c_results = 0
+    total_c_spend = 0.0
+    total_c_impr = 0
+    total_c_reach = 0
     for c in campaigns[:5]:
         cname = c.get('campaign_name', '—')[:35]
         c_spend = _safe_float(c.get('spend', 0))
         c_results = _safe_int(c.get('results', 0))
         c_impr = _safe_int(c.get('impressions', 0))
         c_reach = _safe_int(c.get('reach', 0))
+        total_c_results += c_results
+        total_c_spend += c_spend
+        total_c_impr += c_impr
+        total_c_reach += c_reach
         c_cpr = (
             f'{c_spend / c_results:.2f} {ctx["currency"]}'
             if c_results > 0
@@ -1039,30 +1052,35 @@ def generate_ads_table(data, platform, ctx):
         if ry < 0.15:
             break
 
-    # Totals row
+    # Totals row — use SUM of displayed campaigns, not platform-level totals
+    total_cpr = (
+        f'{total_c_spend / total_c_results:.2f} {ctx["currency"]}'
+        if total_c_results > 0
+        else 'N/A'
+    )
     ry -= 0.02
     ax.text(
         0.01, ry, 'Total', fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
-        0.35, ry, fmt_full(results), fontsize=7, fontweight='bold',
+        0.35, ry, fmt_full(total_c_results), fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
-        0.50, ry, cpr_text, fontsize=7, fontweight='bold',
+        0.50, ry, total_cpr, fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
-        0.65, ry, f'{spend:,.2f} {ctx["currency"]}', fontsize=7,
+        0.65, ry, f'{total_c_spend:,.2f} {ctx["currency"]}', fontsize=7,
         fontweight='bold', color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
-        0.80, ry, fmt_full(impr), fontsize=7, fontweight='bold',
+        0.80, ry, fmt_full(total_c_impr), fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
-        0.92, ry, fmt_full(reach), fontsize=7, fontweight='bold',
+        0.92, ry, fmt_full(total_c_reach), fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
 
@@ -1105,21 +1123,21 @@ def generate_budget_table(ctx):
     y = 0.72
     for label, value in rows:
         ax.text(
-            0.08, y, label, fontsize=14, color=META_TEXT,
+            0.08, y, label, fontsize=11, color=META_TEXT,
             transform=ax.transAxes, fontweight='bold',
         )
         ax.plot(
-            [0.22, 0.22], [y - 0.03, y + 0.04], color=META_TEXT,
+            [0.25, 0.25], [y - 0.025, y + 0.035], color=META_TEXT,
             linewidth=1.5, transform=ax.transAxes, clip_on=False,
         )
         ax.text(
-            0.25, y, value, fontsize=14, color=META_TEXT, transform=ax.transAxes,
+            0.28, y, value, fontsize=11, color=META_TEXT, transform=ax.transAxes,
         )
         ax.plot(
-            [0.05, 0.60], [y - 0.05, y - 0.05], color=META_TEXT,
+            [0.05, 0.60], [y - 0.04, y - 0.04], color=META_TEXT,
             linewidth=1, transform=ax.transAxes, clip_on=False,
         )
-        y -= 0.14
+        y -= 0.16
 
     return fig_to_buf(fig)
 
@@ -1164,10 +1182,24 @@ def build_report(template_path, ctx, output_path):
 
     # ── #1: TOC — sweep "X" and "Page" placeholders only ──────────────
     sweep_placeholder_text(slide_toc)
+    # Issue 10: cover baked-in "where" text on TOC slide
+    toc_cover = slide_toc.shapes.add_shape(
+        1, Inches(1.0), Inches(2.0), Inches(2.0), Inches(0.4)
+    )
+    toc_cover.fill.solid()
+    toc_cover.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    toc_cover.line.fill.background()
 
     # ── Fill standard slides ───────────────────────────────────────────
     fill_cover(slide_cover, ctx)
     fill_scope(slide_scope, ctx)
+    # Issue 11: cover "Achievements & Challenges" on Scope slide
+    scope_cover = slide_scope.shapes.add_shape(
+        1, Inches(7.0), Inches(1.5), Inches(3.0), Inches(0.5)
+    )
+    scope_cover.fill.solid()
+    scope_cover.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    scope_cover.line.fill.background()
 
     # Original slides keep their baked-in section headers; just sweep
     # placeholder text. Page numbers are set later.
@@ -1198,6 +1230,7 @@ def build_report(template_path, ctx, output_path):
     clear_slide_content(slide_content_ig)
     clear_slide_content(slide_audience_ig)
     clear_slide_content(slide_ads_ig)
+    clear_slide_content(slide_insights)  # Issue 1: clear baked-in ADS nav bar
 
     # ── Add section headers to cleared slides ──────────────────────────
     add_section_header(slide_ads_fb, 'ADS', 'Facebook', ctx['date_range'])
@@ -1207,6 +1240,7 @@ def build_report(template_path, ctx, output_path):
     add_section_header(slide_msg_ig, 'MESSAGING', 'Instagram', ctx['date_range'])
     add_section_header(slide_content_ig, 'CONTENT', 'Instagram', ctx['date_range'])
     add_section_header(slide_audience_ig, 'AUDIENCE', 'Instagram', ctx['date_range'])
+    add_section_header(slide_insights, 'INSIGHTS', '', ctx['date_range'])  # Issue 1
     fill_thank_you(slide_thank_you, ctx)
 
     content_left = Inches(0.76)
@@ -1236,17 +1270,9 @@ def build_report(template_path, ctx, output_path):
     # ── #13: INSIGHTS slide is TEXT ONLY, no content table ─────────────
     insights = ctx.get('insights', [])
     if insights:
-        for shape in slide_insights.shapes:
-            if shape.has_text_frame:
-                for para in shape.text_frame.paragraphs:
-                    text = para.text.strip()
-                    if (text in ('Type hereeeeeeeee', 'Hi hi', 'hi', 'HI')
-                            or 'Type here' in text):
-                        for run in para.runs:
-                            run.text = ""
         insight_text = '\n'.join(f'• {ins}' for ins in insights)
         add_text_box(
-            slide_insights, Inches(0.76), Inches(2.0), Inches(8.5), Inches(4.5),
+            slide_insights, Inches(0.76), Inches(2.5), Inches(8.5), Inches(4.0),
             insight_text, font_size=10,
             color_rgb=RGBColor.from_string('050505'),
         )
