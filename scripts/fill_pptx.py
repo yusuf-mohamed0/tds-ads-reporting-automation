@@ -50,6 +50,19 @@ META_BORDER = '#DADDE1'
 PAGE_W = 13.333
 PAGE_H = 7.5
 
+PLACEHOLDER_TEXTS = {'Type hereeeeeeeee', 'Hi hi', 'hi', 'HI', 'Type here', 'Client Name', 'Date'}
+
+
+def sweep_placeholder_text(slide):
+    """Clear any remaining placeholder text from all shapes on a slide."""
+    for shape in slide.shapes:
+        if shape.has_text_frame and 'Slide Number Placeholder' not in shape.name:
+            for para in shape.text_frame.paragraphs:
+                text = para.text.strip()
+                if text in PLACEHOLDER_TEXTS or 'Type here' in text:
+                    for run in para.runs:
+                        run.text = ""
+
 
 def fmt_num(n):
     if n >= 1_000_000: return f"{n/1_000_000:.1f}M"
@@ -605,7 +618,7 @@ def generate_ads_table(data, platform, ctx):
     cpr = spend / results if results > 0 else 0
 
     ry = 0.90
-    ax.text(0.01, ry, f'07-2026 | Engagement', fontsize=6.5, color='#0084FF', transform=ax.transAxes)
+    ax.text(0.01, ry, f'{ctx["month_num"]:02d}-{ctx["year"]} | Engagement', fontsize=6.5, color='#0084FF', transform=ax.transAxes)
     ax.text(0.22, ry, platform, fontsize=6.5, color=META_TEXT, transform=ax.transAxes)
     ax.text(0.35, ry, fmt_full(results), fontsize=6.5, color=META_TEXT, transform=ax.transAxes)
     ax.text(0.50, ry, f'{cpr:.2f} {ctx["currency"]}', fontsize=6.5, color=META_TEXT, transform=ax.transAxes)
@@ -666,64 +679,70 @@ def build_report(template_path, ctx, output_path):
     """Build report using the template, filling content areas."""
     prs = Presentation(str(template_path))
 
-    new_slide_audience_ig = duplicate_slide(prs, 9)
-    new_slide_ads_fb = duplicate_slide(prs, 7)
-    new_slide_ads_ig = duplicate_slide(prs, 7)
-    new_slide_budget = duplicate_slide(prs, 3)
-    new_slide_insights = duplicate_slide(prs, 3)
+    # Track original slides by reference
+    slide_cover = prs.slides[0]
+    slide_toc = prs.slides[1]
+    slide_scope = prs.slides[2]
+    slide_reach_fb = prs.slides[3]
+    slide_reach_ig = prs.slides[4]
+    slide_msg_fb = prs.slides[5]
+    slide_msg_ig = prs.slides[6]
+    slide_content_fb = prs.slides[7]
+    slide_content_ig = prs.slides[8]
+    slide_audience_fb = prs.slides[9]
+    slide_thank_you = prs.slides[10]
 
-    slides = list(prs.slides)
+    # Duplicate slides (5 total)
+    slide_audience_ig = duplicate_slide(prs, 9)
+    slide_ads_fb = duplicate_slide(prs, 7)
+    slide_ads_ig = duplicate_slide(prs, 7)
+    slide_budget = duplicate_slide(prs, 3)
+    slide_insights = duplicate_slide(prs, 3)
 
-    fill_cover(slides[0], ctx)
-    fill_scope(slides[2], ctx)
+    fill_cover(slide_cover, ctx)
+    fill_scope(slide_scope, ctx)
 
-    fill_section_slide(slides[3], ctx, 'REACH', 'Facebook', ctx.get('reach_fb', {}), 4)
-    fill_section_slide(slides[4], ctx, 'REACH', 'Instagram', ctx.get('reach_ig', {}), 5)
-    fill_section_slide(slides[5], ctx, 'MESSAGING', 'Facebook', ctx.get('msg_fb', {}), 6)
-    fill_section_slide(slides[6], ctx, 'MESSAGING', 'Instagram', ctx.get('msg_ig', {}), 7)
-    fill_section_slide(slides[7], ctx, 'CONTENT', 'Facebook', ctx.get('content_fb', {}), 8)
-    fill_section_slide(slides[8], ctx, 'CONTENT', 'Instagram', ctx.get('content_ig', {}), 9)
-    fill_section_slide(slides[9], ctx, 'AUDIENCE', 'Facebook', ctx.get('audience_fb', {}), 10)
+    fill_section_slide(slide_reach_fb, ctx, 'REACH', 'Facebook', ctx.get('reach_fb', {}), 4)
+    fill_section_slide(slide_reach_ig, ctx, 'REACH', 'Instagram', ctx.get('reach_ig', {}), 5)
+    fill_section_slide(slide_msg_fb, ctx, 'MESSAGING', 'Facebook', ctx.get('msg_fb', {}), 6)
+    fill_section_slide(slide_msg_ig, ctx, 'MESSAGING', 'Instagram', ctx.get('msg_ig', {}), 7)
+    fill_section_slide(slide_content_fb, ctx, 'CONTENT', 'Facebook', ctx.get('content_fb', {}), 8)
+    fill_section_slide(slide_content_ig, ctx, 'CONTENT', 'Instagram', ctx.get('content_ig', {}), 9)
+    fill_section_slide(slide_audience_fb, ctx, 'AUDIENCE', 'Facebook', ctx.get('audience_fb', {}), 10)
 
-    fill_thank_you(slides[10], ctx)
-
-    add_section_header(slides[11], 'AUDIENCE', 'Instagram', ctx['date_range'])
-    add_section_header(slides[12], 'ADS', 'Facebook', ctx['date_range'])
-    add_section_header(slides[13], 'ADS', 'Instagram', ctx['date_range'])
-    add_section_header(slides[14], 'ADS', '', ctx['date_range'])
-    add_section_header(slides[15], 'INSIGHTS', '', ctx['date_range'])
-
-    page_nums = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10,
-                 10: 11, 11: 12, 12: 13, 13: 14, 14: 15, 15: 16}
-    for idx, page_num in page_nums.items():
-        update_slide_number(slides[idx], page_num)
+    add_section_header(slide_audience_ig, 'AUDIENCE', 'Instagram', ctx['date_range'])
+    add_section_header(slide_ads_fb, 'ADS', 'Facebook', ctx['date_range'])
+    add_section_header(slide_ads_ig, 'ADS', 'Instagram', ctx['date_range'])
+    add_section_header(slide_budget, 'ADS', '', ctx['date_range'])
+    add_section_header(slide_insights, 'INSIGHTS', '', ctx['date_range'])
+    fill_thank_you(slide_thank_you, ctx)
 
     content_left = Inches(0.76)
     content_top = Inches(3.0)
     content_width = Inches(8.5)
     content_height = Inches(3.5)
 
-    charts = {
-        3: generate_reach_chart(ctx.get('reach_fb', {}), 'Facebook', ctx),
-        4: generate_reach_chart(ctx.get('reach_ig', {}), 'Instagram', ctx),
-        5: generate_messaging_chart(ctx.get('msg_fb', {}), 'Facebook', ctx),
-        6: generate_messaging_chart(ctx.get('msg_ig', {}), 'Instagram', ctx),
-        7: generate_content_table(ctx.get('content_fb', {}), 'Facebook', ctx),
-        8: generate_content_table(ctx.get('content_ig', {}), 'Instagram', ctx),
-        9: generate_audience_chart(ctx.get('audience_fb', {}), 'Facebook', ctx),
-        11: generate_audience_chart(ctx.get('audience_ig', {}), 'Instagram', ctx),
-        12: generate_ads_table(ctx.get('ads_fb', {}), 'Facebook', ctx),
-        13: generate_ads_table(ctx.get('ads_ig', {}), 'Instagram', ctx),
-        14: generate_budget_table(ctx),
-    }
+    charts = [
+        (slide_reach_fb, generate_reach_chart(ctx.get('reach_fb', {}), 'Facebook', ctx)),
+        (slide_reach_ig, generate_reach_chart(ctx.get('reach_ig', {}), 'Instagram', ctx)),
+        (slide_msg_fb, generate_messaging_chart(ctx.get('msg_fb', {}), 'Facebook', ctx)),
+        (slide_msg_ig, generate_messaging_chart(ctx.get('msg_ig', {}), 'Instagram', ctx)),
+        (slide_content_fb, generate_content_table(ctx.get('content_fb', {}), 'Facebook', ctx)),
+        (slide_content_ig, generate_content_table(ctx.get('content_ig', {}), 'Instagram', ctx)),
+        (slide_audience_fb, generate_audience_chart(ctx.get('audience_fb', {}), 'Facebook', ctx)),
+        (slide_audience_ig, generate_audience_chart(ctx.get('audience_ig', {}), 'Instagram', ctx)),
+        (slide_ads_fb, generate_ads_table(ctx.get('ads_fb', {}), 'Facebook', ctx)),
+        (slide_ads_ig, generate_ads_table(ctx.get('ads_ig', {}), 'Instagram', ctx)),
+        (slide_budget, generate_budget_table(ctx)),
+    ]
 
-    for slide_idx, img_buf in charts.items():
-        slides[slide_idx].shapes.add_picture(img_buf, content_left, content_top,
-                                              content_width, content_height)
+    for slide_obj, img_buf in charts:
+        slide_obj.shapes.add_picture(img_buf, content_left, content_top,
+                                     content_width, content_height)
 
     insights = ctx.get('insights', [])
     if insights:
-        for shape in slides[15].shapes:
+        for shape in slide_insights.shapes:
             if shape.has_text_frame:
                 for para in shape.text_frame.paragraphs:
                     text = para.text.strip()
@@ -731,11 +750,50 @@ def build_report(template_path, ctx, output_path):
                         for run in para.runs:
                             run.text = ""
         insight_text = '\n'.join(f'• {ins}' for ins in insights)
-        add_text_box(slides[15], Inches(0.76), Inches(2.0), Inches(8.5), Inches(4.5),
+        add_text_box(slide_insights, Inches(0.76), Inches(2.0), Inches(8.5), Inches(4.5),
                      insight_text, font_size=10, color_rgb=RGBColor.from_string('050505'))
 
+    # Sweep ALL slides for any remaining placeholder text
+    for slide in prs.slides:
+        sweep_placeholder_text(slide)
+
     prs.save(str(output_path))
+
+    # Post-process: move Thank You slide to the end of sldIdLst AND swap ids
+    from lxml import etree
+    prs2 = Presentation(str(output_path))
+    pres_elem = prs2.part._element
+    sldIdLst = pres_elem.find('.//{http://schemas.openxmlformats.org/presentationml/2006/main}sldIdLst')
+    
+    rId15_elem = None
+    rId24_elem = None
+    for el in list(sldIdLst):
+        rid = el.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+        if rid == 'rId15':
+            rId15_elem = el
+        elif rid == 'rId24':
+            rId24_elem = el
+    
+    if rId15_elem is not None and rId24_elem is not None:
+        # Swap id values so rId15 gets the highest id
+        id15 = rId15_elem.get('id')
+        id24 = rId24_elem.get('id')
+        rId15_elem.set('id', id24)
+        rId24_elem.set('id', id15)
+        # Move rId15 to end
+        sldIdLst.remove(rId15_elem)
+        sldIdLst.append(rId15_elem)
+    
+    prs2.save(str(output_path))
+
+    # Set page numbers AFTER lxml reorder to match final slide order
+    prs_final = Presentation(str(output_path))
+    for i, slide in enumerate(prs_final.slides, 1):
+        update_slide_number(slide, i)
+    prs_final.save(str(output_path))
+
     return output_path
+
 
 
 def main():
