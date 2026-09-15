@@ -1,59 +1,159 @@
 # TDS Ads Reporting Automation
 
-Local Linux automation plan for monthly Meta Ads client PDF reporting.
+Monthly Meta Ads client PDF reporting system for Traffic Digital Solutions.
 
-## Purpose
+## What It Does
 
-This project defines the requirements, architecture, setup process, and implementation roadmap for a local reporting app that:
+Automatically generates professional 17-page PDF reports for each client:
 
-- Pulls Meta Ads performance through the official Meta Marketing API.
-- Pulls Facebook/Instagram Page, content, messaging, and audience insights for Business Suite reports.
-- Supports around 30 clients with mixed goals.
-- Generates English monthly PDF reports matching the agency's "Lodge - March 2026" reference format.
-- Emails reports automatically to `reports@trafficdigitalsolutions.com`.
-- Avoids browser-login automation, screenshots, 2FA bypasses, Gmail-code handling, and dashboard scraping.
+1. **Pulls data** from Meta Marketing API (campaigns, ad sets, conversions, demographics, pacing)
+2. **Pulls insights** from Facebook Page (media views, followers, messaging, top posts)
+3. **Pulls insights** from Instagram (reach, views, demographics, top media)
+4. **Generates** individual client PDFs + combined portfolio report
+5. **Emails** reports to `reports@trafficdigitalsolutions.com`
 
-## Final Recommendation
+## Report Structure (17 pages)
 
-Build a local Python app that uses official APIs and generates PDFs directly.
+| Page | Section |
+|------|---------|
+| 1 | Cover (dark, branded) |
+| 2 | Table of Contents |
+| 3 | Executive Summary |
+| 4 | KPI Dashboard |
+| 5 | Campaign Performance |
+| 6 | Top Ad Sets |
+| 7 | Conversion Breakdown |
+| 8 | Distribution (devices, publishers, countries) |
+| 9 | Audience Insights |
+| 10 | Pacing Analysis |
+| 11 | Facebook Reach |
+| 12 | Instagram Reach |
+| 13 | Messaging |
+| 14 | Content |
+| 15 | Insights & Recommendations |
+| 16 | Thank You |
+| 17 | Tim Attribution |
 
-Do not automate Meta Business Suite UI screenshots. API-based reporting is more stable, safer, easier to audit, and scalable for 30 clients.
+## Quick Start
 
-## Repository Contents
+```bash
+# 1. Clone the repo
+git clone https://github.com/yusuf-mohamed0/tds-ads-reporting-automation.git
+cd tds-ads-reporting-automation
 
-- `docs/01-requirements.md` - full business, technical, access, data, security, and operational requirements.
-- `docs/02-architecture.md` - complete architecture, data flow, modules, database, scheduler, and failure handling.
-- `docs/03-meta-api-setup.md` - Meta Business/Developer setup checklist.
-- `docs/05-client-config-and-data-model.md` - client mapping, goal mapping, and local database schema.
-- `docs/06-report-template-spec.md` - PDF sections, metrics, charts, and narrative structure.
-- `docs/06-report-template-spec-lodge.md` - exact page-by-page analysis of the "Lodge - March 2026" reference report and API mapping.
-- `docs/07-security-and-operations.md` - secrets, permissions, logs, backups, monitoring, and monthly runbook.
-- `docs/08-implementation-roadmap.md` - phased build plan and acceptance criteria.
-- `docs/09-qa-checklist.md` - verification checklist before monthly reports are trusted.
-- `configs/clients.example.yaml` - example client configuration.
-- `manual_inputs/lodge_2026-03.yaml` - example of budget/VAT/notes that are manually injected into the report.
-- `.env.example` - local environment variable template.
+# 2. Set up environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-## Required Inputs Before Build
+# 3. Configure credentials
+cp .env.example .env
+# Edit .env with your Meta API tokens
 
-- Sample report PDF/screenshots from the current manual process.
-- Meta ad account IDs for every client.
-- Client goal definitions and conversion event/action names.
-- Sender email method for `reports@trafficdigitalsolutions.com`.
-- Brand styling: logo, colors, fonts, footer/contact details.
+# 4. Configure clients
+cp configs/clients.example.yaml configs/clients.yaml
+# Edit configs/clients.yaml with your client ad accounts
 
-## Target Monthly Workflow
+# 5. Run reports
+PYTHONPATH=src python -m tds_ads_reporting.app run-all --month 2026-08
+```
 
-1. Linux scheduler runs the app on the first day of each month.
-2. App calculates previous month date range.
-3. App pulls each client's Meta data.
-4. App normalizes metrics into one local SQLite database.
-5. App generates one PDF report per client.
-6. App emails PDFs to `reports@trafficdigitalsolutions.com`.
-7. App writes success/failure logs and a run summary.
+## Monthly Automation
 
-## Current Status
+Reports auto-generate on the 1st of each month at 09:00 (Cairo time):
 
-Planning and architecture package complete, now aligned to the real "Lodge - March 2026" sample report. The sample confirms reports are full Meta Business Suite reports (Reach, Messaging, Content, Audience, Ads) requiring Page/Instagram insights permissions in addition to ads access, plus manual budget/VAT/insight narrative that must be injected locally.
+```bash
+# Install cron jobs
+./scripts/install-monthly-cron.sh
 
-Implementation can start after API credentials are created and per-client page/IG access is confirmed.
+# Manual run for a specific month
+./scripts/run-monthly.sh 2026-08
+
+# Manual run with email
+./scripts/run-monthly.sh 2026-08 --email
+```
+
+## Project Structure
+
+```
+tds-ads-reporting-automation/
+├── src/tds_ads_reporting/     # Main application code
+│   ├── app.py                 # CLI entry point
+│   ├── config.py              # Client configuration loader
+│   ├── meta/                  # Meta API integration
+│   │   ├── ads.py             # Campaign/adset/conversion data
+│   │   ├── page.py            # Facebook Page insights
+│   │   └── credentials.py     # API token management
+│   ├── reporting/             # Report generation
+│   │   ├── assembler.py       # Data → template context
+│   │   ├── pdf.py             # Jinja2 → WeasyPrint PDF
+│   │   └── combined.py        # Portfolio combined report
+│   ├── insights/              # AI insights engine
+│   ├── mailer/                # Email sending
+│   ├── storage/               # SQLite cache
+│   ├── manual_inputs/         # YAML budget/VAT/recommendations
+│   └── observability/         # Logging
+├── templates/                 # Jinja2 HTML templates
+│   ├── report.html.j2         # Individual client report
+│   ├── combined_report.html.j2 # Portfolio report
+│   └── _styles.html.j2        # Shared styles + Proxima Nova fonts
+├── configs/
+│   ├── clients.yaml           # Client configurations (gitignored)
+│   └── clients.example.yaml   # Example config
+├── scripts/                   # Automation scripts
+│   ├── run-monthly.sh         # Monthly report runner
+│   ├── install-monthly-cron.sh # Cron setup
+│   └── watch-trigger.sh       # Backend trigger watcher
+├── tests/                     # Unit tests
+├── manual_inputs/             # Per-client budget/VAT YAML files
+├── docs/                      # Architecture & setup documentation
+└── assets/                    # Brand assets & fonts
+```
+
+## Client Configuration
+
+Each client in `configs/clients.yaml` needs:
+
+- `id`: Unique identifier (matches folder names)
+- `name`: Display name
+- `currency`: EGP, ILS, USD, or CAD
+- `meta.ad_accounts`: List of Meta ad account IDs
+- `meta.page_id`: Facebook Page ID (for Page insights)
+- `meta.instagram_id`: Instagram Business Account ID
+- `goals.primary`: Primary conversion goal
+- `monthly_budget`: Budget for utilization tracking
+
+## Manual Inputs
+
+Per-client monthly YAML files in `manual_inputs/`:
+
+```yaml
+budget:
+  amount: 50000
+  vat: 14%
+recommendations:
+  - "Increase budget for top-performing campaign"
+  - "Pause underperforming ad sets"
+```
+
+## Tests
+
+```bash
+PYTHONPATH=src .venv/bin/python -m pytest tests/ -v
+```
+
+## Credentials
+
+Required in `.env`:
+
+- `META_SYSTEM_USER_TOKEN` — Meta System User token with ads_read permission
+- `META_PAGE_ACCESS_TOKEN` — Page access token with ANALYZE+CONTENT tasks
+- `META_API_VERSION` — API version (default: v26.0)
+
+## Generated Output
+
+Reports are saved to `reports/{client-id}/{YYYY-MM}/`:
+- `{client-id}_{YYYY-MM}.pdf` — Individual client report
+- `reports/combined/combined_{YYYY-MM}.pdf` — Portfolio summary
+
+Reports are gitignored (regenerated monthly by automation).

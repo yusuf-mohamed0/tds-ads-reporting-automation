@@ -994,7 +994,7 @@ def generate_ads_table(data, platform, ctx):
     ry = 0.90
     ax.text(
         0.01, ry,
-        f'{ctx["month_num"]:02d}-{ctx["year"]} | Engagement',
+        f'{ctx["month_num"]:02d}-{ctx["year"]} | Total',
         fontsize=6.5, color='#0084FF', transform=ax.transAxes,
     )
     ax.text(0.22, ry, platform, fontsize=6.5, color=META_TEXT, transform=ax.transAxes)
@@ -1096,16 +1096,6 @@ def generate_budget_table(ctx):
     ax.axis('off')
     fig.patch.set_facecolor('white')
 
-    reenie_fp = FontProperties(fname=str(FONT_DIR / "ReenieBeanie-Regular.ttf"))
-    ax.text(
-        0.05, 0.92, 'ADS', fontsize=32, fontweight='bold',
-        color=META_TEXT, transform=ax.transAxes,
-    )
-    ax.text(
-        0.05, 0.84, 'Budget & Spend Overview', fontsize=16, color=GOLD,
-        transform=ax.transAxes, fontproperties=reenie_fp,
-    )
-
     budget = ctx.get('budget', {})
     budget_total = _safe_float(budget.get('budget', 0))
     spent = _safe_float(budget.get('spent', 0))
@@ -1113,31 +1103,32 @@ def generate_budget_table(ctx):
     remaining = _safe_float(budget.get('remaining', 0))
     cur = ctx.get('currency', 'EGP')
 
+    # Shortened labels to prevent collision with pipe separator and values
     rows = [
-        ('Budget (allocated)', f'{budget_total:,.0f} {cur}'),
-        ('Spent (ad delivery)', f'{spent:,.0f} {cur}'),
-        ('VAT (14%)', f'{vat:,.0f} {cur}'),
+        ('Budget', f'{budget_total:,.0f} {cur}'),
+        ('Spent', f'{spent:,.0f} {cur}'),
+        ('VAT', f'{vat:,.0f} {cur}'),
         ('Remaining', f'{remaining:,.0f} {cur}'),
     ]
 
-    y = 0.72
+    y = 0.85
     for label, value in rows:
         ax.text(
-            0.08, y, label, fontsize=11, color=META_TEXT,
+            0.05, y, label, fontsize=11, color=META_TEXT,
             transform=ax.transAxes, fontweight='bold',
         )
         ax.plot(
-            [0.25, 0.25], [y - 0.025, y + 0.035], color=META_TEXT,
+            [0.32, 0.32], [y - 0.025, y + 0.035], color=META_TEXT,
             linewidth=1.5, transform=ax.transAxes, clip_on=False,
         )
         ax.text(
-            0.28, y, value, fontsize=11, color=META_TEXT, transform=ax.transAxes,
+            0.35, y, value, fontsize=11, color=META_TEXT, transform=ax.transAxes,
         )
         ax.plot(
-            [0.05, 0.60], [y - 0.04, y - 0.04], color=META_TEXT,
+            [0.05, 0.75], [y - 0.04, y - 0.04], color=META_TEXT,
             linewidth=1, transform=ax.transAxes, clip_on=False,
         )
-        y -= 0.16
+        y -= 0.18
 
     return fig_to_buf(fig)
 
@@ -1182,20 +1173,23 @@ def build_report(template_path, ctx, output_path):
 
     # ── #1: TOC — sweep "X" and "Page" placeholders only ──────────────
     sweep_placeholder_text(slide_toc)
-    # Issue 10: cover baked-in "where" text on TOC slide
+    # Cover baked-in "where" text on TOC slide — use dark color matching background
+    # Gold 'where' text spans y=1.67-2.0" — rect must cover full range
     toc_cover = slide_toc.shapes.add_shape(
-        1, Inches(1.0), Inches(2.0), Inches(2.0), Inches(0.4)
+        1, Inches(0.5), Inches(0.8), Inches(5.0), Inches(1.2)
     )
     toc_cover.fill.solid()
-    toc_cover.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    toc_cover.fill.fore_color.rgb = RGBColor(0x17, 0x14, 0x14)
     toc_cover.line.fill.background()
 
     # ── Fill standard slides ───────────────────────────────────────────
     fill_cover(slide_cover, ctx)
     fill_scope(slide_scope, ctx)
-    # Issue 11: cover "Achievements & Challenges" on Scope slide
+    # Cover "Achievements & Challenges" annotation on Scope slide
+    # Picture 2 with gold italic text is at y=2.0-2.33"
+    # Bullet text starts at y=2.33" — must NOT overlap
     scope_cover = slide_scope.shapes.add_shape(
-        1, Inches(7.0), Inches(1.5), Inches(3.0), Inches(0.5)
+        1, Inches(0.3), Inches(1.9), Inches(7.0), Inches(0.4)
     )
     scope_cover.fill.solid()
     scope_cover.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)

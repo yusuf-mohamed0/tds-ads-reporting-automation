@@ -4,261 +4,1031 @@
 <meta charset="utf-8">
 {% include '_styles.html.j2' %}
 <style>
-  @page dark {
-    size: 10in 7.5in;
+  /* ═══════════════════════════════════════════════════════════════
+     COVER PAGE — dark, full-bleed
+     ═══════════════════════════════════════════════════════════════ */
+  .cover-page {
+    page: cover;
+    width: 210mm;
+    height: 297mm;
     margin: 0;
-    background: #171414;
-    @bottom-left { content: ""; }
-    @bottom-center { content: ""; border: 0; }
-    @bottom-right { content: ""; }
+    padding: 0;
+    overflow: hidden;
+    background: #171414 url("assets/company/cover-bg.png") center / cover no-repeat;
+    color: #FFFFFF;
+    position: relative;
   }
-  .ref-page { min-height: 160mm; padding-top: 0; }
-  .ref-page::before { display: none !important; }
-  .ref-head { display: flex; align-items: center; gap: 13mm; margin-bottom: 13mm; }
-  .ref-mark { width: 24mm; height: 8.5mm; object-fit: contain; }
-  .ref-nav { display: flex; align-items: center; gap: 7mm; color: #838081; font-size: 9pt; white-space: nowrap; }
-  .ref-nav span.active { color: #171414; font-weight: 700; border: 1.5px solid #F89D4B; border-radius: 50%; padding: 2.5mm 4mm; }
-  .ref-title { margin: 0; color: #171414; font-size: 27pt; line-height: 1; text-transform: uppercase; }
-  .ref-subtitle { margin: 3mm 0 8mm 0; font-size: 14pt; }
-  .ref-subtitle strong { display: inline-block; min-width: 32mm; font-weight: 400; }
-  .ref-hand { color: #DFA629; font-family: 'Reenie Beanie'; font-size: 23pt; line-height: .8; }
-  .ref-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 7mm 0; }
-  .ref-card { border: 1px solid #E1E1E1; border-top: 2px solid #FCB900; padding: 4mm; }
-  .ref-card .label { color: #838081; font-size: 8pt; text-transform: uppercase; }
-  .ref-card .value { margin-top: 1mm; color: #171414; font-size: 19pt; font-weight: 600; }
-  .ref-note { font-size: 11pt; line-height: 1.55; }
-  .ref-page table { font-size: 9pt; }
-  .ref-page th { font-size: 8.5pt; }
-  .budget-grid { width: 128mm; margin: 18mm 0 0 8mm; font-size: 22pt; }
-  .budget-row { display: grid; grid-template-columns: 45mm 1fr; border-bottom: 2px solid #171414; padding: 4mm 0; }
-  .budget-row:last-child { border-bottom: 0; }
-  .insight-list { margin: 8mm 0 0 0; padding-left: 7mm; font-size: 11pt; line-height: 1.35; }
-  .insight-list li { margin-bottom: 3.5mm; }
-  .contents-page { page: dark; width: 254mm; height: 190.5mm; padding: 14mm 16mm; color: #FFFFFF; background: #171414; }
-  .contents-page::before { display: none !important; }
-  .contents-page .ref-mark { content: url('assets/company/traffic-logo-white.png'); }
-  .contents-title { margin: 15mm 0 15mm 0; font-size: 28pt; }
-  .contents-grid { display: grid; grid-template-columns: 1fr 1.6fr 22mm; gap: 5mm 8mm; font-size: 18pt; font-weight: 700; }
-  .contents-line { border-bottom: 1px solid #F89D4B; }
-  .contents-page-number { font-size: 12pt; font-weight: 400; }
-  .thank-title { margin-top: 72mm; font-size: 38pt; font-style: italic; line-height: 1.05; }
-  .ref-scope { margin-top: 12mm; font-size: 15pt; line-height: 1.5; }
-  [dir="rtl"] { font-family: 'Avenir Next LT Pro'; }
+  .cover-inner {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28mm 24mm 24mm 24mm;
+  }
+  .cover-logo {
+    width: 50mm;
+    height: auto;
+  }
+  .cover-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+  .cover-kicker {
+    color: rgba(255,255,255,0.5);
+    font-size: 13pt;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4mm;
+  }
+  .cover-title {
+    color: #FFFFFF;
+    font-size: 32pt;
+    font-weight: 800;
+    line-height: 1.08;
+    margin: 0 0 6mm 0;
+    letter-spacing: -0.3px;
+  }
+  .cover-rule {
+    width: 16mm;
+    height: 3px;
+    background: var(--accent);
+    margin-bottom: 6mm;
+  }
+  .cover-client {
+    color: #FFFFFF;
+    font-size: 16pt;
+    font-weight: 300;
+    margin-bottom: 2mm;
+  }
+  .cover-period {
+    color: rgba(255,255,255,0.65);
+    font-size: 11pt;
+    font-weight: 400;
+  }
+  .cover-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.3px;
+  }
+  .cover-footer .accent { color: var(--accent); font-weight: 600; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TABLE OF CONTENTS — dark page
+     ═══════════════════════════════════════════════════════════════ */
+  .toc-page {
+    page: toc;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #171414;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+  }
+  .toc-inner {
+    padding: 28mm 24mm 24mm 24mm;
+    height: 297mm;
+    display: flex;
+    flex-direction: column;
+  }
+  .toc-logo { width: 42mm; height: auto; margin-bottom: 16mm; }
+  .toc-heading {
+    font-size: 10pt;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12mm;
+  }
+  .toc-list { list-style: none; padding: 0; margin: 0; flex: 1; }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    padding: 3.5mm 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .toc-item:last-child { border-bottom: 0; }
+  .toc-num {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12pt;
+    width: 10mm;
+    flex-shrink: 0;
+  }
+  .toc-label {
+    font-size: 12pt;
+    font-weight: 600;
+    flex: 1;
+  }
+  .toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted rgba(255,255,255,0.15);
+    margin: 0 4mm;
+    position: relative;
+    top: -2px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONTENT PAGES — white background
+     ═══════════════════════════════════════════════════════════════ */
+  .content-page {
+    padding: 0;
+  }
+
+  /* Page header: logo + breadcrumb */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    padding-bottom: 3mm;
+    margin-bottom: 4mm;
+    border-bottom: 1px solid var(--line);
+  }
+  .page-logo { width: 14mm; height: auto; }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    font-size: 6.5pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .breadcrumb .sep { color: var(--line); }
+  .breadcrumb .active {
+    color: var(--brand);
+    border: 1px solid var(--accent);
+    border-radius: 2mm;
+    padding: 0.5mm 2.5mm;
+    font-weight: 700;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     THANK YOU PAGE
+     ═══════════════════════════════════════════════════════════════ */
+  .thank-page {
+    page: thank;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #171414;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .thank-logo { width: 36mm; margin-bottom: 14mm; }
+  .thank-title {
+    font-size: 38pt;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 10mm;
+  }
+  .thank-rule {
+    width: 14mm;
+    height: 3px;
+    background: var(--accent);
+    margin-bottom: 10mm;
+  }
+  .thank-client {
+    font-size: 13pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 2mm;
+  }
+  .thank-date {
+    font-size: 10pt;
+    color: rgba(255,255,255,0.45);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TIM ATTRIBUTION — last page, image fills page
+     ═══════════════════════════════════════════════════════════════ */
+  .tim-page {
+    page: tim;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #FFFFFF;
+    overflow: hidden;
+  }
+  .tim-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     BUDGET SUMMARY TABLE
+     ═══════════════════════════════════════════════════════════════ */
+  .budget-table { width: 80mm; margin: 4mm 0; }
+  .budget-table td { font-size: 9pt; padding: 2mm 3mm; }
+  .budget-table td:first-child { color: var(--muted); font-weight: 500; }
+  .budget-table td:last-child { font-weight: 700; text-align: right; }
+  .budget-table tr { border-bottom: 1px solid var(--line); }
+  .budget-table tr:last-child { border-bottom: 0; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     INSIGHTS LIST
+     ═══════════════════════════════════════════════════════════════ */
+  .insight-list {
+    padding-left: 5mm;
+    font-size: 8.5pt;
+    line-height: 1.45;
+  }
+  .insight-list li { margin-bottom: 2.5mm; }
+  .insight-list li::marker { color: var(--accent); font-weight: 700; }
 </style>
 </head>
 <body>
 
+{# ─────────────────────────────────────────────────────────────
+   NAVIGATION MACRO — renders the breadcrumb bar
+   ───────────────────────────────────────────────────────────── #}
 {% macro nav(active) -%}
-<div class="ref-head">
-  <img class="ref-mark" src="assets/company/gold-mark-small.png" alt="Traffic">
-  <div class="ref-nav">
-    {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
-    <span class="{% if item == active %}active{% endif %}">{{ item }}</span>
+<div class="page-header">
+  <img class="page-logo" src="assets/company/gold-mark-small.png" alt="Traffic">
+  <div class="breadcrumb">
+    {% set sections = ['Executive Summary', 'KPI Dashboard', 'Campaigns', 'Conversions', 'Distribution', 'Audience', 'Reach', 'Messaging', 'Content', 'Insights'] %}
+    {% for s in sections %}
+      {% if loop.index0 > 0 %}<span class="sep">/</span>{% endif %}
+      <span{% if s == active %} class="active"{% endif %}>{{ s }}</span>
     {% endfor %}
   </div>
 </div>
 {%- endmacro %}
 
-<!-- Cover -->
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 1 — COVER
+   ═══════════════════════════════════════════════════════════════ #}
 <div class="page cover-page">
-  <div class="cover">
-    <div class="cover-head"><div class="cover-brand">Traffic</div></div>
-    <div>
-      <div class="cover-kicker">MARKETING<br>REPORT</div>
-      <h1 class="cover-title">Client Name: {{ client.name | default('Client') }}</h1>
-      <div class="cover-sub">Date: {{ report_date | default('') }}</div>
+  <div class="cover-inner">
+    <img class="cover-logo" src="assets/company/traffic-logo-white.png" alt="Traffic">
+    <div class="cover-body">
+      <div class="cover-kicker">Marketing Report</div>
+      <div class="cover-rule"></div>
+      <h1 class="cover-title">Performance<br>Report</h1>
+      <div class="cover-client">{{ client.name | default('Client') }}</div>
+      <div class="cover-period">{{ month_label | default('') }} &middot; {{ platforms_label | default('Meta') }}</div>
     </div>
-    <div></div>
+    <div class="cover-footer">
+      <span>Prepared on {{ report_date | default('') }}</span>
+      <span class="accent">Traffic Digital Solutions</span>
+    </div>
   </div>
 </div>
 
-<!-- What to expect -->
-<div class="page contents-page">
-  <img class="ref-mark" src="assets/company/traffic-logo-white.png" alt="Traffic">
-  <h1 class="contents-title">WHAT TO EXPECT:</h1>
-  <div class="contents-grid">
-    {% for item in ['REPORT SCOPE', 'REACH', 'MESSAGING', 'CONTENT', 'AUDIENCE', 'ADS', 'INSIGHTS'] %}
-    <div>{{ item }}</div><div class="contents-line"></div><div class="contents-page-number">Page</div>
-    {% endfor %}
-  </div>
-</div>
 
-<!-- Report scope -->
-<div class="page ref-page">
-  {{ nav('REPORT SCOPE') }}
-  <h1 class="ref-title">Report Scope</h1>
-  <div class="ref-hand">Achievements &amp; Challenges</div>
-  <div class="ref-scope">
-    <ul>
-      {% if scope_prose %}<li>{{ scope_prose }}</li>{% elif executive_summary %}<li>{{ executive_summary }}</li>{% endif %}
-      {% if scope_notes %}<li>{{ scope_notes }}</li>{% endif %}
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 2 — TABLE OF CONTENTS
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page toc-page">
+  <div class="toc-inner">
+    <img class="toc-logo" src="assets/company/traffic-logo-white.png" alt="Traffic">
+    <div class="toc-heading">Table of Contents</div>
+    <ul class="toc-list">
+      {% set toc_items = [
+        ('01', 'Executive Summary'),
+        ('02', 'KPI Dashboard'),
+        ('03', 'Campaign Performance'),
+        ('04', 'Conversion Breakdown'),
+        ('05', 'Distribution'),
+        ('06', 'Audience Insights'),
+        ('07', 'Reach'),
+        ('08', 'Messaging'),
+        ('09', 'Content'),
+        ('10', 'Insights & Recommendations'),
+      ] %}
+      {% for num, label in toc_items %}
+      <li class="toc-item">
+        <span class="toc-num">{{ num }}</span>
+        <span class="toc-label">{{ label }}</span>
+        <span class="toc-dots"></span>
+      </li>
+      {% endfor %}
     </ul>
+    <div style="font-size: 8pt; color: rgba(255,255,255,0.35); margin-top: 8mm;">
+      {{ client.name | default('Client') }} &middot; {{ month_label | default('') }}
+    </div>
   </div>
 </div>
 
-<!-- Reach: fixed Facebook and Instagram pages — shows paid metrics from Ads Insights when Page API unavailable -->
-{% set reach_rows = reach | default([]) %}
-{% for platform_name in ['Facebook', 'Instagram'] %}
-{% set platform = reach_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
-<div class="page ref-page">
-  {{ nav('REACH') }}
-  <h1 class="ref-title">Reach</h1>
-  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  {% if platform.cards is defined and platform.cards %}
-  <div class="ref-cards">
-    {% for card in platform.cards %}
-    <div class="ref-card"><div class="label">{{ card.label }}</div><div class="value">{{ card.value }}</div></div>
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 3 — EXECUTIVE SUMMARY
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Executive Summary') }}
+    <h2 class="section">Executive Summary</h2>
+
+    {% if scope_prose %}
+    <div class="exec-box">
+      <h3>Scope</h3>
+      <p>{{ scope_prose }}</p>
+    </div>
+    {% endif %}
+
+    {% if executive_summary %}
+    <div class="exec-box" style="border-left-color: var(--brand); background: #1E1E1E;">
+      <h3>Summary</h3>
+      <p>{{ executive_summary }}</p>
+    </div>
+    {% endif %}
+
+    {% if scope_notes %}
+    <div class="prose" style="margin-top: 3mm;">
+      {{ scope_notes }}
+    </div>
+    {% endif %}
+
+    {# Period quick-facts #}
+    <div class="kpi-grid" style="margin-top: 5mm; grid-template-columns: repeat(3, 1fr);">
+      <div class="kpi-card">
+        <div class="label">Reporting Period</div>
+        <div class="value" style="font-size: 11pt;">{{ month_label | default('') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Date Range</div>
+        <div class="value" style="font-size: 11pt;">{{ date_start | default('') }} — {{ date_stop | default('') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Platform</div>
+        <div class="value" style="font-size: 11pt;">{{ platforms_label | default('Meta') }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 4 — KPI DASHBOARD
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('KPI Dashboard') }}
+    <h2 class="section">KPI Dashboard</h2>
+
+    {% set k = kpis | default({}) %}
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Total Spend</div>
+        <div class="value">{{ k.spend_fmt | default('—') }}</div>
+        {% if prev_month_label %}<div class="sub">vs. {{ prev_month_label }}</div>{% endif %}
+      </div>
+      <div class="kpi-card">
+        <div class="label">{{ results_label | default('Results') }}</div>
+        <div class="value">{{ k.results_fmt | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Impressions</div>
+        <div class="value">{{ k.impressions_fmt | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">CTR</div>
+        <div class="value">{{ k.ctr | default('—') }}%</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Cost per Result</div>
+        <div class="value" style="font-size: 13pt;">{{ k.cpr_fmt | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">CPC</div>
+        <div class="value" style="font-size: 13pt;">{{ k.cpc | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">CPM</div>
+        <div class="value" style="font-size: 13pt;">{{ k.cpm | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Frequency</div>
+        <div class="value" style="font-size: 13pt;">{{ k.frequency | default('—') }}</div>
+      </div>
+    </div>
+
+    {% set b = budget | default({}) %}
+    {% if b.amount and b.amount != 'Not provided' %}
+    <h3 class="block">Budget Utilization</h3>
+    <div class="util-wrap">
+      <div class="util-label">
+        <span>Spent: <strong>{{ b.spent | default('—') }}</strong></span>
+        <span>Budget: <strong>{{ b.amount | default('—') }}</strong></span>
+      </div>
+      <div class="util-track">
+        <div class="util-fill" style="width: {{ ((b.spent_raw | default(0)) / (b.amount_raw | default(1)) * 100) | round }}%"></div>
+      </div>
+    </div>
+    <table class="budget-table" style="margin-top: 3mm;">
+      <tr><td>Budget</td><td>{{ b.amount | default('—') }}</td></tr>
+      <tr><td>Spent</td><td>{{ b.spent | default('—') }}</td></tr>
+      <tr><td>VAT</td><td>{{ b.vat | default('—') }}</td></tr>
+      <tr><td>Remaining</td><td>{{ b.remaining | default('—') }}</td></tr>
+    </table>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 5 — CAMPAIGN PERFORMANCE
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Campaigns') }}
+    <h2 class="section">Campaign Performance</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% set camps = campaigns | default([]) %}
+    {% if camps %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 22%;">Campaign</th>
+          <th style="width: 13%;">Objective</th>
+          <th style="width: 8%;">Status</th>
+          <th class="num" style="width: 10%;">Spend</th>
+          <th class="num" style="width: 9%;">{{ results_label | default('Results') }}</th>
+          <th class="num" style="width: 9%;">CPR</th>
+          <th class="num" style="width: 7%;">CTR</th>
+          <th class="num" style="width: 10%;">Impressions</th>
+          <th class="num" style="width: 10%;">Reach</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in camps %}
+        <tr{% if c.is_top %} class="row-top"{% endif %}{% if c.is_bottom %} class="row-bottom"{% endif %}>
+          <td>
+            {{ c.name }}
+            {% if c.is_top %}<span class="badge top">Top</span>{% endif %}
+            {% if c.is_bottom %}<span class="badge bottom">Flag</span>{% endif %}
+            <span class="cell-sub">Share: {{ c.share_pct | default(0) }}%</span>
+          </td>
+          <td>{{ c.objective | default('—') }}</td>
+          <td>{{ c.status | default('—') }}</td>
+          <td class="num">{{ c.spend_fmt | default('—') }}</td>
+          <td class="num">{{ c.results | default(0) }}</td>
+          <td class="num">{{ c.cpr_fmt | default('—') }}</td>
+          <td class="num">{{ c.ctr | default(0) }}%</td>
+          <td class="num">{{ c.impressions | default(0) | int }}</td>
+          <td class="num">{{ c.reach | default(0) | int }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="lead muted">No campaign data available for this period.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 6 — TOP AD SETS
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Campaigns') }}
+    <h2 class="section">Top Ad Sets</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">Ranked by spend &middot; {{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% set adsets = top_adsets | default([]) %}
+    {% if adsets %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Ad Set</th>
+          <th style="width: 20%;">Campaign</th>
+          <th class="num" style="width: 11%;">Spend</th>
+          <th class="num" style="width: 11%;">CPR</th>
+          <th class="num" style="width: 11%;">Impressions</th>
+          <th class="num" style="width: 10%;">CTR</th>
+          <th class="num" style="width: 12%;">Clicks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in adsets %}
+        <tr>
+          <td>{{ a.adset_name | default('—') }}</td>
+          <td>{{ a.campaign_name | default('—') }}</td>
+          <td class="num">{{ a.spend_fmt | default('—') }}</td>
+          <td class="num">{{ a.cpr_fmt | default('—') }}</td>
+          <td class="num">{{ a.impressions_fmt | default('—') }}</td>
+          <td class="num">{{ a.ctr | default(0) }}%</td>
+          <td class="num">{{ a.clicks | default(0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="lead muted">No ad set data available for this period.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 7 — CONVERSION BREAKDOWN
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Conversions') }}
+    <h2 class="section">Conversion Breakdown</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% set convs = conversions | default([]) %}
+    {% if convs %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%;">Action</th>
+          <th class="num" style="width: 14%;">Count</th>
+          <th class="num" style="width: 18%;">Cost</th>
+          <th class="num" style="width: 18%;">CPA</th>
+          <th class="num" style="width: 12%;">Share</th>
+          <th style="width: 10%;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in convs %}
+        <tr>
+          <td>{{ c.label | default('—') }}</td>
+          <td class="num">{{ c.count | default(0) }}</td>
+          <td class="num">{{ c.cost_fmt | default('—') }}</td>
+          <td class="num">{{ c.cpa_fmt | default('—') }}</td>
+          <td class="num">{{ c.pct | default(0) }}%</td>
+          <td>
+            <div class="share">
+              <div class="share-track"><div class="share-fill" style="width: {{ c.pct | default(0) }}%"></div></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {# Conversion bar chart #}
+    <h3 class="block">Conversion Distribution</h3>
+    <div class="chart">
+      {% for c in convs %}
+      <div class="hbar-row">
+        <span class="hbar-label">{{ c.label | default('—') }}</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width: {{ c.pct | default(0) }}%"></div></div>
+        <span class="hbar-val">{{ c.count | default(0) }} ({{ c.pct | default(0) }}%)</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="lead muted">No conversion data available for this period.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 8 — DISTRIBUTION
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Distribution') }}
+    <h2 class="section">Distribution</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    <div class="two-col">
+      {# Devices #}
+      <div>
+        <h3 class="block">By Device</h3>
+        {% set devs = devices | default([]) %}
+        {% if devs %}
+        <div class="chart">
+          {% for d in devs %}
+          <div class="hbar-row">
+            <span class="hbar-label">{{ d.label | default('—') }}</span>
+            <div class="hbar-track"><div class="hbar-fill" style="width: {{ d.pct | default(0) }}%"></div></div>
+            <span class="hbar-val">{{ d.spend_fmt | default('—') }} &middot; {{ d.pct | default(0) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted small">No device data.</p>
+        {% endif %}
+      </div>
+
+      {# Publishers / Platforms #}
+      <div>
+        <h3 class="block">By Platform</h3>
+        {% set pubs = publishers | default([]) %}
+        {% if pubs %}
+        <div class="chart">
+          {% for p in pubs %}
+          <div class="hbar-row">
+            <span class="hbar-label">{{ p.label | default('—') }}</span>
+            <div class="hbar-track"><div class="hbar-fill alt" style="width: {{ p.pct | default(0) }}%"></div></div>
+            <span class="hbar-val">{{ p.spend_fmt | default('—') }} &middot; {{ p.pct | default(0) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted small">No platform data.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Countries #}
+    <h3 class="block">By Country</h3>
+    {% set ctrs = countries | default([]) %}
+    {% if ctrs %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%;">Country</th>
+          <th class="num" style="width: 18%;">Spend</th>
+          <th class="num" style="width: 18%;">Impressions</th>
+          <th class="num" style="width: 18%;">{{ results_label | default('Results') }}</th>
+          <th class="num" style="width: 18%;">Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in ctrs %}
+        <tr>
+          <td>{{ c.label | default('—') }}</td>
+          <td class="num">{{ c.spend_fmt | default('—') }}</td>
+          <td class="num">{{ c.impressions_fmt | default('—') }}</td>
+          <td class="num">{{ c.results_fmt | default('—') }}</td>
+          <td class="num">{{ c.pct | default(0) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted small">No country data.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 9 — AUDIENCE INSIGHTS (Demographics)
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Audience') }}
+    <h2 class="section">Audience Insights</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {# Demographics table #}
+    <h3 class="block">Age &amp; Gender Distribution</h3>
+    {% set demos = demographics | default([]) %}
+    {% if demos %}
+    <table style="width: 80%;">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Age Group</th>
+          <th class="num" style="width: 25%;">Female</th>
+          <th class="num" style="width: 25%;">Male</th>
+          <th class="num" style="width: 20%;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in demos %}
+        <tr>
+          <td>{{ d.age | default('—') }}</td>
+          <td class="num">{{ d.female | default('—') }}</td>
+          <td class="num">{{ d.male | default('—') }}</td>
+          <td class="num">{{ d.total | default('—') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted small">No demographic data available.</p>
+    {% endif %}
+
+    {# Demographic detail (spend-based) #}
+    {% set demo_detail = demographic_detail | default([]) %}
+    {% if demo_detail %}
+    <h3 class="block">Spend by Demographic</h3>
+    <div class="chart">
+      {% for d in demo_detail %}
+      <div class="hbar-row">
+        <span class="hbar-label">{{ d.age | default('—') }} {{ d.gender | default('') }}</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width: {{ d.bar_width | default(0) }}%"></div></div>
+        <span class="hbar-val">{{ d.spend_fmt | default('—') }} &middot; {{ d.pct | default(0) }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 10 — PACING (Day-of-week + Hour-of-day)
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Audience') }}
+    <h2 class="section">Pacing Analysis</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    <div class="two-col">
+      {# Day of week #}
+      <div>
+        <h3 class="block">Spend by Day of Week</h3>
+        {% set dow = dow_pacing | default([]) %}
+        {% if dow %}
+        <div class="chart">
+          {% for d in dow %}
+          <div class="hbar-row">
+            <span class="hbar-label">{{ d.label | default('—') }}</span>
+            <div class="hbar-track"><div class="hbar-fill" style="width: {{ d.bar_width | default(0) }}%"></div></div>
+            <span class="hbar-val">{{ d.spend_fmt | default('—') }} &middot; {{ d.pct | default(0) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted small">No day-of-week data.</p>
+        {% endif %}
+      </div>
+
+      {# Hour of day #}
+      <div>
+        <h3 class="block">Spend by Hour of Day</h3>
+        {% set hr = hour_pacing | default([]) %}
+        {% if hr %}
+        <div class="chart">
+          {% for h in hr %}
+          <div class="hbar-row">
+            <span class="hbar-label">{{ h.label | default('—') }}:00</span>
+            <div class="hbar-track"><div class="hbar-fill alt" style="width: {{ h.bar_width | default(0) }}%"></div></div>
+            <span class="hbar-val">{{ h.spend_fmt | default('—') }} &middot; {{ h.pct | default(0) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted small">No hourly data.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 11 — REACH: FACEBOOK
+   ═══════════════════════════════════════════════════════════════ #}
+{% set reach_data = reach | default([]) %}
+{% set fb_reach = reach_data | selectattr('name', 'equalto', 'Facebook') | first | default({}) %}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Reach') }}
+    <h2 class="section">Reach</h2>
+    <h3 class="block" style="margin-top: 1mm;">Facebook</h3>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% if fb_reach and fb_reach.cards is defined and fb_reach.cards %}
+    <div class="kpi-grid" style="grid-template-columns: repeat({{ fb_reach.cards | length }}, 1fr);">
+      {% for card in fb_reach.cards %}
+      <div class="kpi-card">
+        <div class="label">{{ card.label }}</div>
+        <div class="value" style="font-size: 13pt;">{{ card.value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if fb_reach.paid_pct is defined and fb_reach.paid_pct %}
+    <h3 class="block" style="margin-top: 4mm;">Organic vs Paid</h3>
+    <div class="util-wrap">
+      <div class="util-track">
+        <div class="util-fill" style="width: {{ fb_reach.paid_pct }}%"></div>
+      </div>
+      <div class="util-label" style="margin-top: 1mm;">
+        <span>Paid: {{ fb_reach.paid_pct }}%</span>
+        <span>Organic: {{ fb_reach.organic_pct | default(0) }}%</span>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if fb_reach.followers is defined and fb_reach.followers %}
+    <div class="kpi-grid" style="grid-template-columns: 1fr 1fr; margin-top: 4mm;">
+      <div class="kpi-card">
+        <div class="label">Followers</div>
+        <div class="value" style="font-size: 13pt;">{{ fb_reach.followers }}</div>
+        {% if fb_reach.followers_delta is defined and fb_reach.followers_delta %}
+        <div class="sub" style="color: var(--ok);">+{{ fb_reach.followers_delta }} this period</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="prose muted" style="margin-top: 4mm;">
+      No Facebook reach data available from Meta for this reporting period.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 12 — REACH: INSTAGRAM
+   ═══════════════════════════════════════════════════════════════ #}
+{% set ig_reach = reach_data | selectattr('name', 'equalto', 'Instagram') | first | default({}) %}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Reach') }}
+    <h2 class="section">Reach</h2>
+    <h3 class="block" style="margin-top: 1mm;">Instagram</h3>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% if ig_reach and ig_reach.cards is defined and ig_reach.cards %}
+    <div class="kpi-grid" style="grid-template-columns: repeat({{ ig_reach.cards | length }}, 1fr);">
+      {% for card in ig_reach.cards %}
+      <div class="kpi-card">
+        <div class="label">{{ card.label }}</div>
+        <div class="value" style="font-size: 13pt;">{{ card.value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if ig_reach.followers is defined and ig_reach.followers %}
+    <div class="kpi-grid" style="grid-template-columns: 1fr; margin-top: 4mm; max-width: 60mm;">
+      <div class="kpi-card">
+        <div class="label">Followers</div>
+        <div class="value" style="font-size: 13pt;">{{ ig_reach.followers }}</div>
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="prose muted" style="margin-top: 4mm;">
+      No Instagram reach data available from Meta for this reporting period.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 13 — MESSAGING (Facebook + Instagram)
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Messaging') }}
+    <h2 class="section">Messaging</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
+
+    {% set msg_data = messaging | default([]) %}
+    {% for platform_name in ['Facebook', 'Instagram'] %}
+    {% set m = msg_data | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+    <h3 class="block">{{ platform_name }}</h3>
+
+    {% if m.name is defined %}
+    <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 120mm;">
+      <div class="kpi-card">
+        <div class="label">Total Contacts</div>
+        <div class="value" style="font-size: 14pt;">{{ m.total_contacts | default('—') }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Conversations Started</div>
+        <div class="value" style="font-size: 14pt;">{{ m.conversations | default('—') }}</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="prose muted" style="margin-bottom: 4mm;">
+      No {{ platform_name }} messaging data available for this period.
+    </div>
+    {% endif %}
     {% endfor %}
   </div>
-  {% if platform.paid_pct or platform.organic_pct %}
-  <h3>Organic vs Paid</h3>
-  <div class="util-track"><div class="util-fill" style="width: {{ platform.paid_pct | default(0) }}%"></div></div>
-  <p class="ref-note">Paid {{ platform.paid_pct | default(0) }}% &middot; Organic {{ platform.organic_pct | default(0) }}%</p>
-  {% endif %}
-  {% if platform.followers %}<p class="ref-note">Followers: <strong>{{ platform.followers }}</strong>{% if platform.followers_delta %} (+{{ platform.followers_delta }}){% endif %}</p>{% endif %}
-  {% else %}<p class="ref-note muted">No data available from Meta for this platform and reporting period.</p>{% endif %}
 </div>
-{% endfor %}
 
-<!-- Messaging: fixed Facebook and Instagram pages -->
-{% set messaging_rows = messaging | default([]) %}
-{% for platform_name in ['Facebook', 'Instagram'] %}
-{% set m = messaging_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
-<div class="page ref-page">
-  {{ nav('MESSAGING') }}
-  <h1 class="ref-title">Messaging</h1>
-  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  <h3>Contacts</h3>
-  <p class="ref-note">People who messaged your business during this reporting period.</p>
-  {% if m.name is defined %}
-  <div class="ref-cards" style="grid-template-columns: repeat(2, 1fr); width: 135mm;">
-    <div class="ref-card"><div class="label">Total Contacts</div><div class="value">{{ m.total_contacts }}</div></div>
-    <div class="ref-card"><div class="label">Messaging Conversations Started</div><div class="value">{{ m.conversations }}</div></div>
-  </div>
-  {% else %}<p class="ref-note muted">No data available from Meta for this platform and reporting period.</p>{% endif %}
-</div>
-{% endfor %}
 
-<!-- Content: fixed Facebook and Instagram pages — shows top campaigns when organic posts unavailable -->
-{% set content_rows = content | default([]) %}
-{% set campaign_list = active_campaigns | default([]) %}
-{% for platform_name in ['Facebook', 'Instagram'] %}
-{% set platform = content_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
-<div class="page ref-page">
-  {{ nav('CONTENT') }}
-  <h1 class="ref-title">Content</h1>
-  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  {% if platform.top is defined and platform.top %}
-  <h3>Top Content</h3>
-  <table>
-    <thead><tr><th>Title</th><th>Date Published</th><th class="num">Views</th><th class="num">Reach</th></tr></thead>
-    <tbody>
-      {% for row in platform.top %}
-      <tr><td>{{ row.title }}</td><td>{{ row.date }}</td><td class="num">{{ row.views }}</td><td class="num">{{ row.reach }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% elif campaign_list %}
-  <h3>Top Campaign Performance</h3>
-  <table>
-    <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Results</th><th class="num">CTR</th></tr></thead>
-    <tbody>
-      {% for c in campaign_list[:8] %}
-      <tr><td>{{ c.name }}</td><td class="num">{{ c.spend_fmt }}</td><td class="num">{{ c.results }}</td><td class="num">{{ c.ctr }}%</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <p class="ref-note muted">Organic content data unavailable — showing top ad campaign performance instead.</p>
-  {% else %}<p class="ref-note muted">No content data available from Meta for this platform and reporting period.</p>{% endif %}
-</div>
-{% endfor %}
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 14 — CONTENT (Facebook + Instagram)
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Content') }}
+    <h2 class="section">Content</h2>
+    <p class="lead" style="font-size: 8.5pt; color: var(--muted);">{{ date_start | default('') }} — {{ date_stop | default('') }}</p>
 
-<!-- Audience: fixed Facebook and Instagram pages — uses Ads Insights demographic/country data when Page API unavailable -->
-{% set audience_rows = audience | default([]) %}
-{% set demo_rows = demographics | default([]) %}
-{% set country_data = countries | default([]) %}
-{% for platform_name in ['Facebook', 'Instagram'] %}
-{% set platform = audience_rows | selectattr('name', 'equalto', platform_name) | first | default({}) %}
-<div class="page ref-page">
-  {{ nav('AUDIENCE') }}
-  <h1 class="ref-title">Audience</h1>
-  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  {% if platform.followers is defined %}
-  <div class="ref-card" style="width:55mm;"><div class="label">Followers</div><div class="value">{{ platform.followers }}</div></div>
-  {% endif %}
-  {% if platform.geo %}
-  <h3>Top Countries</h3>
-  <table style="width:120mm"><thead><tr><th>Country</th><th class="num">Followers</th></tr></thead><tbody>
-    {% for row in platform.geo %}<tr><td>{{ row.country }}</td><td class="num">{{ row.value }}</td></tr>{% endfor %}
-  </tbody></table>
-  {% elif country_data %}
-  <h3>Top Countries (Paid Audience)</h3>
-  <table style="width:120mm;font-size:9pt"><thead><tr><th>Country</th><th class="num">Spend</th><th class="num">Impressions</th><th class="num">Results</th></tr></thead><tbody>
-    {% for row in country_data[:5] %}<tr><td>{{ row.label }}</td><td class="num">{{ row.spend_fmt }}</td><td class="num">{{ row.impressions_fmt }}</td><td class="num">{{ row.results_fmt }}</td></tr>{% endfor %}
-  </tbody></table>
-  {% endif %}
-  {% if demo_rows %}
-  <h3>Age &amp; Gender Distribution</h3>
-  <table style="width:120mm;font-size:9pt"><thead><tr><th>Age Group</th><th class="num">Female</th><th class="num">Male</th><th class="num">Total</th></tr></thead><tbody>
-    {% for row in demo_rows[:6] %}<tr><td>{{ row.age }}</td><td class="num">{{ row.female }}</td><td class="num">{{ row.male }}</td><td class="num">{{ row.total }}</td></tr>{% endfor %}
-  </tbody></table>
-  {% elif not platform.followers is defined and not country_data %}
-  <p class="ref-note muted">Page/Instagram access was not granted in Meta Business Settings — organic audience data unavailable. Ads Insights demographic data shown above when available.</p>
-  {% endif %}
-</div>
-{% endfor %}
+    {% set content_data = content | default([]) %}
+    {% for platform_name in ['Facebook', 'Instagram'] %}
+    {% set plat = content_data | selectattr('name', 'equalto', platform_name) | first | default({}) %}
+    <h3 class="block">{{ platform_name }}</h3>
 
-<!-- Ads: fixed Facebook and Instagram pages -->
-{% set platform_rows = platforms | default([]) %}
-{% for platform_name in ['Facebook', 'Instagram'] %}
-{% set p = platform_rows | selectattr('label', 'equalto', platform_name) | first | default({}) %}
-<div class="page ref-page">
-  {{ nav('ADS') }}
-  <h1 class="ref-title">Ads</h1>
-  <div class="ref-subtitle"><strong>{{ platform_name }}</strong>{{ date_start }} - {{ date_stop }}</div>
-  {% if p.label is defined %}
-  <div class="ref-cards">
-    <div class="ref-card"><div class="label">Amount Spent</div><div class="value">{{ p.spend_fmt }}</div></div>
-    <div class="ref-card"><div class="label">Results</div><div class="value">{{ p.results_fmt }}</div></div>
-    <div class="ref-card"><div class="label">Cost Per Result</div><div class="value">{{ p.cpr_fmt | default('-') }}</div></div>
-    <div class="ref-card"><div class="label">CTR</div><div class="value">{{ p.ctr | default(0) }}%</div></div>
-  </div>
-  <table><thead><tr><th>Platform</th><th class="num">Impressions</th><th class="num">Reach</th><th class="num">Share</th></tr></thead>
-  <tbody><tr><td>{{ platform_name }}</td><td class="num">{{ p.impressions }}</td><td class="num">{{ p.reach }}</td><td class="num">{{ p.share_pct }}%</td></tr></tbody></table>
-  {% else %}<p class="ref-note muted">No advertising data available from Meta for this platform and reporting period.</p>{% endif %}
-</div>
-{% endfor %}
-
-<!-- Budget -->
-<div class="page ref-page">
-  {{ nav('ADS') }}
-  <h1 class="ref-title">Ads</h1>
-  <div class="ref-hand">Budget &amp; Spend Overview</div>
-  <div class="budget-grid">
-    <div class="budget-row"><span>Budget</span><strong>{{ budget.amount | default('-') }}</strong></div>
-    <div class="budget-row"><span>Spent</span><strong>{{ budget.spent | default('-') }}</strong></div>
-    <div class="budget-row"><span>VAT</span><strong>{{ budget.vat | default('-') }}</strong></div>
-    <div class="budget-row"><span>Remaining</span><strong>{{ budget.remaining | default('-') }}</strong></div>
+    {% if plat.top is defined and plat.top %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40%;">Title</th>
+          <th style="width: 20%;">Date</th>
+          <th class="num" style="width: 20%;">Views</th>
+          <th class="num" style="width: 20%;">Reach</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in plat.top %}
+        <tr>
+          <td>{{ row.title | default('—') }}</td>
+          <td>{{ row.date | default('—') }}</td>
+          <td class="num">{{ row.views | default('—') }}</td>
+          <td class="num">{{ row.reach | default('—') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="prose muted" style="margin-bottom: 4mm;">
+      No {{ platform_name }} content data available for this period.
+    </div>
+    {% endif %}
+    {% endfor %}
   </div>
 </div>
 
-<!-- Insights -->
-<div class="page ref-page">
-  {{ nav('INSIGHTS') }}
-  <h1 class="ref-title">Insights</h1>
-  <ul class="insight-list">
-    {% for item in anomalies | default([]) %}<li>{{ item }}</li>{% endfor %}
-    {% for item in recommendations | default([]) %}<li>{{ item }}</li>{% endfor %}
-    {% for item in manual_recommendations | default([]) %}<li>{{ item }}</li>{% endfor %}
-  </ul>
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 15 — INSIGHTS & RECOMMENDATIONS
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page content-page">
+  <div style="padding: 0 0 2mm 0;">
+    {{ nav('Insights') }}
+    <h2 class="section">Insights &amp; Recommendations</h2>
+
+    {% set anom = anomalies | default([]) %}
+    {% if anom %}
+    <h3 class="block">Anomalies &amp; Observations</h3>
+    <div class="anomaly-box">
+      <ul>
+        {% for item in anom %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% set recs = recommendations | default([]) %}
+    {% if recs %}
+    <h3 class="block">Recommendations</h3>
+    <div class="rec-box">
+      <ol>
+        {% for item in recs %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+
+    {% set man_recs = manual_recommendations | default([]) %}
+    {% if man_recs %}
+    <h3 class="block">Additional Notes</h3>
+    <div class="rec-box">
+      <ol>
+        {% for item in man_recs %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+
+    {% if not anom and not recs and not man_recs %}
+    <p class="lead muted">No insights or recommendations available for this period.</p>
+    {% endif %}
+  </div>
 </div>
 
-<!-- Thank you -->
-<div class="page contents-page">
-  <div class="cover-brand">Traffic</div>
-  <div class="thank-title">THANK<br>YOU</div>
-  <div style="margin-top:30mm; font-size:18pt;">Client Name: {{ client.name | default('Client') }}<br>Date: {{ report_date | default('') }}</div>
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 16 — THANK YOU
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page thank-page">
+  <img class="thank-logo" src="assets/company/traffic-logo-white.png" alt="Traffic">
+  <div class="thank-title">THANK YOU</div>
+  <div class="thank-rule"></div>
+  <div class="thank-client">{{ client.name | default('Client') }}</div>
+  <div class="thank-date">{{ month_label | default('') }} &middot; Prepared {{ report_date | default('') }}</div>
 </div>
+
+
+{# ═══════════════════════════════════════════════════════════════
+   PAGE 17 — TIM ATTRIBUTION (last page)
+   ═══════════════════════════════════════════════════════════════ #}
+<div class="page tim-page">
+  <img class="tim-bg" src="assets/company/tim-attribution.png" alt="This document was automatically generated by Tim">
+</div>
+
 
 </body>
 </html>

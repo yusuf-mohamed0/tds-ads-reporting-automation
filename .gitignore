@@ -1,13 +1,44 @@
+# Environment & secrets
+.env
+
+# Python
 .venv/
 __pycache__/
 *.pyc
-.env
-configs/clients.generated.yaml
-# reports/
-logs/
+*.pyo
+
+# Generated reports (regenerated monthly by the automation)
+reports/
+
+# Data & cache
 data/*.db
 data/*.sqlite
+data/active.json
+data/last_run.json
+data/trigger.json
+data/watch.lock
+
+# Logs
+logs/
+
+# Client config (each deployment has its own)
+configs/clients.generated.yaml
+
+# Temp & lock files
+*.tmp
+.~lock.*
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Brand assets (large, not needed in repo)
 assets/brand/Traffic_brandbook_V4.pdf
 assets/brand/Logo.zip
-.~lock.*
-*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.iml

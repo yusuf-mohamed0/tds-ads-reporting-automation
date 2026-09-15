@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
@@ -7,6 +8,8 @@ from typing import Any
 from tds_ads_reporting.config import Client
 from tds_ads_reporting.insights.engine import generate_insights
 from tds_ads_reporting.manual_inputs.loader import ManualInputs
+
+log = logging.getLogger("tds.assembler")
 from tds_ads_reporting.meta.ads import (
     AdsSummary,
     MetaAdsDataset,
@@ -281,7 +284,7 @@ def _flag_table_rows(campaign_rows: list[dict[str, Any]], insights_payload: dict
         row["is_bottom"] = row["campaign_id"] in bottom_ids
 
 
-def _pacing_series(pacing: dict[str, dict]) -> list[dict[str, Any]]:
+def _pacing_series(pacing: dict[str, dict], currency: str = "") -> list[dict[str, Any]]:
     max_spend = max((v.get("spend", 0) for v in pacing.values()), default=0) or 1
     out = []
     for label, v in pacing.items():
@@ -291,7 +294,7 @@ def _pacing_series(pacing: dict[str, dict]) -> list[dict[str, Any]]:
             {
                 "label": label,
                 "spend": spend,
-                "spend_fmt": _fmt_money(spend, ""),
+                "spend_fmt": _fmt_money(spend, currency),
                 "pct": pct,
                 "bar_width": max(pct, 2.0) if pct else 0.0,
                 "bar_spend": round(spend / max_spend * 100, 1),
@@ -312,6 +315,23 @@ def build_context(
     currency = client.currency
     if data is None:
         data = FetchedData()
+
+    # Validate currency consistency between config and Meta API
+    if data.meta_ads and isinstance(data.meta_ads, MetaAdsDataset):
+        api_currency = data.meta_ads.currency
+        if api_currency and api_currency != currency:
+            log.warning(
+                "Currency mismatch for %s: config=%s, Meta API=%s — using API currency for formatting",
+                client.id, currency, api_currency,
+            )
+            currency = api_currency
+
+    # Warn if client has multiple ad accounts (only first is fetched)
+    if client.meta.ad_accounts and len(client.meta.ad_accounts) > 1:
+        log.warning(
+            "Client %s has %d ad accounts but only the first (%s) is fetched — report may be incomplete",
+            client.id, len(client.meta.ad_accounts), client.meta.ad_accounts[0],
+        )
 
     platforms = []
     if client.meta.ad_accounts:
@@ -512,6 +532,10 @@ def build_context(
                 "results": dataset.total_results,
                 "clicks": sum(c.clicks for c in dataset.campaigns),
             }
+            log.warning(
+                "Legacy AdsSummary for %s — reach is campaign-summed (inflated), not deduplicated",
+                client.id,
+            )
         ads_summary = dataset
 
         # If dataset.platforms is None (older cache), build from publishers breakdown
@@ -555,8 +579,8 @@ def build_context(
         publisher_rows = _bucket_rows(dataset.publishers, currency)
         country_rows = _bucket_rows(dataset.countries, currency)
         demographic_rows, age_gender = _demographic_rows(dataset.demographics, currency)
-        dow_series = _pacing_series(dataset.dow_pacing)
-        hour_series = _pacing_series(dataset.hour_pacing)
+        dow_series = _pacing_series(dataset.dow_pacing, currency)
+        hour_series = _pacing_series(dataset.hour_pacing, currency)
         top_adsets = sorted(dataset.adsets, key=lambda a: a.get("spend", 0), reverse=True)[:15]
         for a in top_adsets:
             a["spend_fmt"] = f"{float(a.get('spend', 0.0)):,.0f}"
@@ -568,7 +592,7 @@ def build_context(
                 "name": "Meta",
                 "spend": _fmt_money(ads_summary.total_spend, currency),
                 "impressions": _fmt_num(ads_summary.total_impressions),
-                "reach": _fmt_num(ads_summary.total_reach),
+                "reach": _fmt_num(dataset.totals.get("reach") or ads_summary.total_reach),
                 "results": _fmt_num(ads_summary.total_results),
                 "campaigns": [
                     {
@@ -637,6 +661,8 @@ def build_context(
         "spent": _fmt_money(budget_spent, currency) if budget_spent else "Not provided",
         "vat": _fmt_money(budget_vat, currency) if budget_vat else "Not provided",
         "remaining": _fmt_money(budget_remaining, currency) if budget_amount else "Not provided",
+        "amount_raw": budget_amount,
+        "spent_raw": budget_spent,
     }
 
     prev_month_label = insights_payload.get("prev_month_label")
