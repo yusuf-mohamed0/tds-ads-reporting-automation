@@ -994,7 +994,9 @@ def generate_ads_table(data, platform, ctx):
     ry = 0.90
     ax.text(
         0.01, ry,
-        f'{ctx["month_num"]:02d}-{ctx["year"]} | Total',
+        # FIX: unambiguous label — this row is the platform-level total,
+        # distinct from the campaign roll-up at the bottom of the table.
+        f'{ctx["month_num"]:02d}-{ctx["year"]} | Platform total',
         fontsize=6.5, color='#0084FF', transform=ax.transAxes,
     )
     ax.text(0.22, ry, platform, fontsize=6.5, color=META_TEXT, transform=ax.transAxes)
@@ -1060,7 +1062,8 @@ def generate_ads_table(data, platform, ctx):
     )
     ry -= 0.02
     ax.text(
-        0.01, ry, 'Total', fontsize=7, fontweight='bold',
+        # FIX: distinct from the platform total row above
+        0.01, ry, 'Campaigns total', fontsize=7, fontweight='bold',
         color=META_MUTED, transform=ax.transAxes,
     )
     ax.text(
@@ -1103,11 +1106,13 @@ def generate_budget_table(ctx):
     remaining = _safe_float(budget.get('remaining', 0))
     cur = ctx.get('currency', 'EGP')
 
-    # Shortened labels to prevent collision with pipe separator and values
+    # Shortened labels to prevent collision with pipe separator and values.
+    # FIX: VAT carries its rate so it is unambiguous; all labels stay well
+    # left of the pipe at x=0.32 (longest label ends near x=0.19).
     rows = [
         ('Budget', f'{budget_total:,.0f} {cur}'),
         ('Spent', f'{spent:,.0f} {cur}'),
-        ('VAT', f'{vat:,.0f} {cur}'),
+        ('VAT (14%)', f'{vat:,.0f} {cur}'),
         ('Remaining', f'{remaining:,.0f} {cur}'),
     ]
 
@@ -1173,10 +1178,15 @@ def build_report(template_path, ctx, output_path):
 
     # ── #1: TOC — sweep "X" and "Page" placeholders only ──────────────
     sweep_placeholder_text(slide_toc)
-    # Cover baked-in "where" text on TOC slide — use dark color matching background
-    # Gold 'where' text spans y=1.67-2.0" — rect must cover full range
+    # Cover baked-in "where" annotation on TOC slide — dark fill matching bg.
+    # Measured at 150dpi on the rendered template: heading "WHAT TO EXPECT:"
+    # occupies y=1.153-1.413" (x=0.687-3.933") and the gold "where" glyph
+    # occupies x=2.393-3.633", y=1.340-1.833". The two overlap by ~0.07"
+    # only in the glyph's ascender tips, so the rect starts just BELOW the
+    # heading baseline (1.42") and ends below the glyph (1.87"). This hides
+    # the whole "where" word while leaving the heading fully readable.
     toc_cover = slide_toc.shapes.add_shape(
-        1, Inches(0.5), Inches(0.8), Inches(5.0), Inches(1.2)
+        1, Inches(2.36), Inches(1.42), Inches(1.30), Inches(0.46)
     )
     toc_cover.fill.solid()
     toc_cover.fill.fore_color.rgb = RGBColor(0x17, 0x14, 0x14)
@@ -1185,11 +1195,15 @@ def build_report(template_path, ctx, output_path):
     # ── Fill standard slides ───────────────────────────────────────────
     fill_cover(slide_cover, ctx)
     fill_scope(slide_scope, ctx)
-    # Cover "Achievements & Challenges" annotation on Scope slide
-    # Picture 2 with gold italic text is at y=2.0-2.33"
-    # Bullet text starts at y=2.33" — must NOT overlap
+    # Cover ONLY the gold "Achievements & Challenges" annotation on the Scope
+    # slide. Measured at 150dpi on the rendered template: the black
+    # "REPORT SCOPE" title occupies y=1.940-2.120" (x=0.760-2.627"), the gold
+    # annotation occupies x=1.087-2.853", y=2.080-2.273", and the first bullet
+    # starts at y=2.420". The rect therefore starts below the title baseline
+    # (2.13") and stops well above the bullets — title and bullets stay
+    # visible, only the stray annotation is removed.
     scope_cover = slide_scope.shapes.add_shape(
-        1, Inches(0.3), Inches(1.9), Inches(7.0), Inches(0.4)
+        1, Inches(1.05), Inches(2.13), Inches(1.85), Inches(0.20)
     )
     scope_cover.fill.solid()
     scope_cover.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
